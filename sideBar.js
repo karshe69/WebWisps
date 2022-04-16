@@ -8,3 +8,4 @@ $("#barIconClose").click(function () {
     $(".sideBar").css("display", "none");
     $("#barIconOpen").css("display", "block");
 });
+
