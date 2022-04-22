@@ -48,78 +48,6 @@ class QuadeCurve {
     }
 }
 
-// class Vertebra {
-//     prev = null;
-//     curve1 = QuadeCurve.constr(0, 0, 0, 0, 0, 0);
-//     curve2 = QuadeCurve.constr(0, 0, 0, 0, 0, 0);
-
-//     constructor(x, y, radius, contRadius, vecAngle, next) {
-//         this.x = x;
-//         this.y = y;
-//         this.radius = radius;
-//         this.contRadius = contRadius;
-//         this.vecAngle = vecAngle;
-//         this.next = next;
-//     }
-
-//     static createVert(x, y, radius, contRadius, next) {
-//         return new Vertebra(x, y, radius, contRadius, null, next);
-//     }
-
-//     draw(ctx) {
-//         let dist, cos, sin;
-//         ctx.beginPath();
-//         if (this.vecAngle === null) {
-//             dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2))
-//             cos = Math.abs(this.x - this.next.x) / dist;
-//             sin = Math.abs(this.y - this.next.y) / dist;
-//         }
-//         else {
-//             cos = Math.cos(this.vecAngle);
-//             sin = Math.sin(this.vecAngle);
-//         }
-//         if (this.prev == null) {
-
-//             this.curve1.setStart(this.x - 2 * this.radius * cos, this.y - 2 * this.radius * sin);
-//             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
-//         }
-//         else {
-//             this.curve1.start = this.prev.curve1.end;
-//             this.curve2.start = this.prev.curve2.end;
-//         }
-
-//         if (this.next == null) {
-//             this.curve2.setEnd(this.x + this.radius * sin, this.y - this.radius * cos);
-//             this.curve1.setEnd(this.x - this.radius * sin, this.y + this.radius * cos);
-//             let distPriv = Math.sqrt(Math.pow(this.x - this.prev.x, 2) + Math.pow(this.y - this.prev.y, 2))
-//             this.curve1.setControl(this.curve1.end.x - 0.5 * distPriv * cos, this.curve1.end.y - 0.5 * dist * sin);
-//             this.curve2.setControl(this.curve2.end.x - 0.5 * distPriv * cos, this.curve2.end.y - 0.5 * dist * sin);
-//             this.drawBezier(ctx)
-
-//         }
-//         else {
-//             let nextAngle = Math.atan2((this.next.y - this.y), (this.next.x - this.x));
-//             this.curve1.setControl(this.x - this.contRadius * this.radius * sin - this.radius * cos, this.y + this.contRadius * this.radius * cos - this.radius * sin);
-//             this.curve1.setEnd(this.x - this.radius * Math.sin(nextAngle), this.y + this.radius * Math.cos(nextAngle));
-//             this.curve2.setControl(this.x + this.contRadius * this.radius * sin - this.radius * cos, this.y - this.contRadius * this.radius * cos - this.radius * sin);
-//             this.curve2.setEnd(this.x + this.radius * Math.sin(nextAngle), this.y - this.radius * Math.cos(nextAngle));
-//         }
-
-//         this.curve1.draw(ctx)
-//         this.curve2.draw(ctx)
-//         ctx.stroke();
-//         if (this.next)
-//             this.next.draw(ctx);
-//     }
-
-//     drawBezier(ctx) {
-//         let cos = Math.cos(this.vecAngle);
-//         let sin = Math.sin(this.vecAngle);
-//         ctx.moveTo(this.curve1.end.x, this.curve1.end.y);
-//         ctx.bezierCurveTo(this.curve1.end.x + this.radius * cos, this.curve1.end.y + this.radius * sin, this.curve2.end.x + this.radius * cos, this.curve2.end.y + this.radius * sin, this.curve2.end.x, this.curve2.end.y);
-//     }
-// }
-
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -344,13 +272,13 @@ class Vertebra {
                 prevIsToTheRight *= -1;
             }
 
-            // ctx.beginPath();
-            // ctx.arc(this.x - prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y + prevIsToTheRight *this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
-            // ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(this.x - prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y + prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.stroke();
 
-            // ctx.beginPath();
-            // ctx.arc(this.x + prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y - prevIsToTheRight *this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
-            // ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(this.x + prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y - prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.stroke();
 
         }
 
@@ -476,16 +404,6 @@ class Vertebra {
 class Wisp {
 
     constructor() {
-        //     this.vert4 = new Vertebra(200, 500, 40, 0.95, new Vector(-0.5, 0), null);
-        //     this.vert3 = Vertebra.createVert(268, 500, 34, 0.95, this.vert4);
-        //     this.vert4.prev = this.vert3;
-        //     this.vert2 = Vertebra.createVert(342, 500, 28, 0.95, this.vert3);
-        //     this.vert3.prev = this.vert2;
-        //     this.vert1 = Vertebra.createVert(450, 500, 24, 0.95, this.vert2);
-        //     this.vert2.prev = this.vert1;
-        //     this.vert0 = Vertebra.createVert(500, 500, 20, 0.95, this.vert1);
-        //     this.vert1.prev = this.vert0;
-
         this.vert4 = new Vertebra(550, 500, 31, 0.95, new Vector(0.5, 0), null);
         this.vert3 = Vertebra.createVert(450, 500, 26, 0.95, this.vert4);
         this.vert4.prev = this.vert3;
@@ -531,16 +449,6 @@ class Wisp {
     }
 
     moveIfNearEdge(ctx) {
-        /*-----------------------------------MAKE THE POS CHANGE OF THE WISP GRADUAL YOU PIECE OF SHIT--------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ----------------------------------------------------------------------------------------------------------------------
-                ---------------------------------------------------------------------------------------------------------------------*/
         let dist;
 
         //right edge of screen
