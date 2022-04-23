@@ -41,10 +41,6 @@ class QuadeCurve {
     }
 }
 
-function getRndInteger(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 class BezierCurve {
     constructor(start, end, controlStart, controlEnd) {
         this.start = start;
@@ -88,11 +84,10 @@ class Vertebra {
     curve1 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
     curve2 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
 
-    constructor(x, y, radius, contRadius, vec, next) {
+    constructor(x, y, radius, vec, next) {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.contRadius = contRadius;
         this.vec = vec;
         this.next = next;
         if (next) {
@@ -100,13 +95,11 @@ class Vertebra {
         }
     }
 
-    static createVert(x, y, radius, contRadius, next) {
-        return new Vertebra(x, y, radius, contRadius, null, next);
+    static createVert(x, y, radius, next) {
+        return new Vertebra(x, y, radius, null, next);
     }
 
     draw(ctx) {
-        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
-        ctx.beginPath();
 
 
         if (this.prev == null) {
@@ -114,11 +107,8 @@ class Vertebra {
             this.curve1.setStart(this.x - 2 * this.radius * this.cos, this.y - 2 * this.radius * this.sin);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
 
-
             this.curve1.setControlStart(this.x - this.radius * this.sin, this.y + this.radius * this.cos);
             this.curve2.setControlStart(this.x + this.radius * this.sin, this.y - this.radius * this.cos);
-
-
 
             this.curve1.setEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
             this.curve2.setEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
@@ -131,10 +121,7 @@ class Vertebra {
             this.curve1.start = this.prev.curve1.end;
             this.curve2.start = this.prev.curve2.end;
 
-
             if (this.next == null) {
-
-
 
                 let dist = Math.sqrt(Math.pow(this.x - this.vec.x, 2) + Math.pow(this.y - this.vec.y, 2));
                 this.cos = (this.x - this.vec.x) / dist;
@@ -165,10 +152,8 @@ class Vertebra {
                 this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
             }
         }
-        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
         this.curve1.draw(ctx)
         this.curve2.draw(ctx)
-        ctx.stroke();
 
         if (this.next) {
             // this.devGraphics(ctx);
@@ -179,12 +164,9 @@ class Vertebra {
     devGraphics(ctx) {
 
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
-        ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
 
-        ctx.strokeStyle = "rgba(255, 0, 0, 1)";
-        ctx.beginPath();
         ctx.moveTo(this.x, this.y);
         ctx.lineTo(this.next.x, this.next.y);
         ctx.stroke();
@@ -194,23 +176,13 @@ class Vertebra {
 
 
 
-            ctx.beginPath();
             ctx.arc(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
-            ctx.beginPath();
             ctx.arc(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
         }
-    }
-
-    calcPrev() {
-        //1 if previous is above, -1 otherwise; used for angle-dependent calculations
-        this.prevIsAbove = (this.prev.y < this.y) ? 1 : -1;
-
-        //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
-        this.prevIsToTheRight = (this.prev.x < this.x) ? 1 : -1;
     }
 
     calcNext() {
@@ -333,39 +305,59 @@ class Vertebra {
 
 class Wisp {
 
-    constructor() {
-        this.vert4 = new Vertebra(550, 500, 31, 0.95, new Vector(0.5, 0), null);
-        this.vert3 = Vertebra.createVert(450, 500, 26, 0.95, this.vert4);
-        this.vert4.prev = this.vert3;
-        this.vert2 = Vertebra.createVert(342, 500, 22, 0.95, this.vert3);
-        this.vert3.prev = this.vert2;
-        this.vert1 = Vertebra.createVert(268, 500, 18, 0.95, this.vert2);
-        this.vert2.prev = this.vert1;
-        this.vert0 = Vertebra.createVert(200, 500, 15, 0.95, this.vert1);
-        this.vert1.prev = this.vert0;
-        this.vertsArr = [];
-        this.vertsArr.push(this.vert0, this.vert1, this.vert2, this.vert3, this.vert4);
+    constructor(n, x, y, radius) {
+        this.radius = radius
+        this.x = x
+        this.y = y
+        this.n = n
+        this.vertebrae = [];
+        let r = 0
+        let vert = null
+        for (let i = 0; i < n; i++) {
+            r = this.radius * this.rate(n, i)
+            if (i == 0){
+                this.vertebrae.push(new Vertebra(Math.floor(x), y, r, new Vector(0.5, 0), vert))
+            }
 
+            else
+                this.vertebrae.push(Vertebra.createVert(Math.floor(x), y, r, vert))
+            x -= 1 * r
+            if (vert)
+                vert.prev = this.vertebrae[i]
+            vert = this.vertebrae[i]
+            console.log(vert.x);
+        }
+        
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
         this.movingFromEdge = false;
 
-        this.vertsArr[this.vertsArr.length - 1].dirRight = false;
+        this.vertebrae[0].dirRight = false;
 
         //makes the wisp move more to the right/the left every CHANGE_DIR_TIMER miliseconds
         //used to make the wisp's movements less monotone, as well as makeing it move in a circular manner
         setInterval(() => {
-            this.vertsArr[this.vertsArr.length - 1].dirRight = !this.vertsArr[this.vertsArr.length - 1].dirRight;
+            this.vertebrae[0].dirRight = !this.vertebrae[0].dirRight;
         }, CHANGE_DIR_TIMER)
     }
 
+    rate(n, i) {
+        return 1 / (1 + 15 * (i / n) * (i / n))
+    }
+
     draw(ctx) {
-        this.vertsArr[0].draw(ctx);
+        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(255, 255, 0, 1)";
+        this.vertebrae[this.n - 1].draw(ctx);
+        ctx.stroke();
+        ctx.fill();
+
     }
 
     move() {
-        this.vertsArr[this.vertsArr.length - 1].move();
+        this.vertebrae[0].move();
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
@@ -384,12 +376,12 @@ class Wisp {
         let dist;
 
         //right edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].x >= ctx.canvas.width) {
+        if (this.vertebrae[0].x >= ctx.canvas.width) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(-1 * dist, 0, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(-1 * dist, 0, this.vertebrae[0], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -399,12 +391,12 @@ class Wisp {
             }, 10);
         }
         //left edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].x <= 0) {
+        if (this.vertebrae[0].x <= 0) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(dist, 0, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(dist, 0, this.vertebrae[0], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -414,12 +406,12 @@ class Wisp {
             }, 10);
         }
         //top bottom edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].y >= ctx.canvas.height) {
+        if (this.vertebrae[0].y >= ctx.canvas.height) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, -1 * dist, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(0, -1 * dist, this.vertebrae[0], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -429,12 +421,12 @@ class Wisp {
             }, 10);
         }
         //bottom edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].y <= 0) {
+        if (this.vertebrae[0].y <= 0) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, dist, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(0, dist, this.vertebrae[0], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -448,12 +440,11 @@ class Wisp {
 
 }
 
-wisp = new Wisp();
+wisp = new Wisp(20, 400, 400, 31);
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
-ctx.strokeStyle = "rgba(255, 255, 0, 1)";
 wisp.draw(ctx);
 
 
@@ -474,3 +465,7 @@ setInterval(() => {
         wisp.draw(ctx);
     }
 }, 10);
+
+function getRndInteger(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
