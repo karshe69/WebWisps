@@ -111,22 +111,20 @@ class Vertebra {
 
         if (this.prev == null) {
 
-            this.calcNext();
-
-            this.curve1.setStart(this.x - 2 * this.nextIsToTheRight * this.radius * this.cos, this.y - 2 * this.nextIsAbove * this.radius * this.sin);
+            this.curve1.setStart(this.x - 2 * this.radius * this.cos, this.y - 2 * this.radius * this.sin);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
 
 
-            this.curve1.setControlStart(this.x - this.nextIsAbove * this.radius * this.sin, this.y + this.nextIsToTheRight * this.radius * this.cos);
-            this.curve2.setControlStart(this.x + this.nextIsAbove * this.radius * this.sin, this.y - this.nextIsToTheRight * this.radius * this.cos);
+            this.curve1.setControlStart(this.x - this.radius * this.sin, this.y + this.radius * this.cos);
+            this.curve2.setControlStart(this.x + this.radius * this.sin, this.y - this.radius * this.cos);
 
 
 
-            this.curve1.setEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
-            this.curve2.setEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
+            this.curve1.setEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
+            this.curve2.setEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
 
-            this.curve1.setControlEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
-            this.curve2.setControlEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
+            this.curve1.setControlEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
+            this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
 
         }
         else {
@@ -139,17 +137,15 @@ class Vertebra {
 
 
                 let dist = Math.sqrt(Math.pow(this.x - this.vec.x, 2) + Math.pow(this.y - this.vec.y, 2));
-                this.cos = Math.abs(this.x - this.vec.x) / dist;
-                this.sin = Math.abs(this.y - this.vec.y) / dist;
+                this.cos = (this.x - this.vec.x) / dist;
+                this.sin = (this.y - this.vec.y) / dist;
 
                 let tempPrev = this.prev;
 
-                this.calcPrev();
+                this.curve1.setControlStart(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin);
+                this.curve2.setControlStart(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin);
 
-                this.curve1.setControlStart(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
-
-                this.curve1.setEnd(this.x + this.prevIsToTheRight * this.radius * this.prev.cos, this.y + this.prevIsAbove * this.radius * this.prev.sin);
+                this.curve1.setEnd(this.x + this.radius * this.prev.cos, this.y + this.radius * this.prev.sin);
                 this.curve2.end = this.curve1.end;
 
                 this.curve1.controlEnd = this.curve1.end;
@@ -159,18 +155,14 @@ class Vertebra {
 
                 let tempPrev = this.prev;
 
-                this.calcPrev();
+                this.curve1.setControlStart(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin);
+                this.curve2.setControlStart(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin);
 
-                this.curve1.setControlStart(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
+                this.curve1.setEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
+                this.curve2.setEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
 
-                this.calcNext();
-
-                this.curve1.setEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
-                this.curve2.setEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
-
-                this.curve1.setControlEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
-                this.curve2.setControlEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
+                this.curve1.setControlEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
+                this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
             }
         }
         ctx.strokeStyle = "rgba(0, 255, 0, 1)";
@@ -191,9 +183,6 @@ class Vertebra {
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
 
-
-        this.calcNext();
-
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
@@ -206,11 +195,11 @@ class Vertebra {
 
 
             ctx.beginPath();
-            ctx.arc(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
         }
@@ -218,26 +207,27 @@ class Vertebra {
 
     calcPrev() {
         //1 if previous is above, -1 otherwise; used for angle-dependent calculations
-        this.prevIsAbove = (this.prev.y < this.y)? 1 : -1;
+        this.prevIsAbove = (this.prev.y < this.y) ? 1 : -1;
 
         //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
-        this.prevIsToTheRight = (this.prev.x < this.x)? 1 : -1;
+        this.prevIsToTheRight = (this.prev.x < this.x) ? 1 : -1;
     }
 
     calcNext() {
         //1 if previous is above, -1 otherwise; used for angle-dependent calculations
-        this.nextIsAbove = (this.next.y > this.y)? 1 : -1;
+        this.nextIsAbove = (this.next.y > this.y) ? 1 : -1;
 
         //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
-        this.nextIsToTheRight = (this.next.x > this.x)? 1 : -1;
+        this.nextIsToTheRight = (this.next.x > this.x) ? 1 : -1;
     }
 
 
     //calculates the cos and sin of this vertabrae.. duh
     calcCosSin() {
+        this.calcNext();
         let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
-        this.cos = Math.abs(this.x - this.next.x) / dist;
-        this.sin = Math.abs(this.y - this.next.y) / dist;
+        this.cos = this.nextIsToTheRight * Math.abs(this.x - this.next.x) / dist;
+        this.sin = this.nextIsAbove * Math.abs(this.y - this.next.y) / dist;
     }
 
     //moves the head of the vertabrae according to the vector, pulling the rest of the vertabrae along in accordance
@@ -324,8 +314,6 @@ class Vertebra {
     changePrev(dist) {
         if (this.prev) {
 
-            this.calcPrev();
-
             let fairDist = 1;
             let distToPrev = Math.sqrt(Math.pow(this.x - this.prev.x, 2) + Math.pow(this.y - this.prev.y, 2));
 
@@ -335,8 +323,8 @@ class Vertebra {
                 }
                 fairDist / 4;
             }
-            this.prev.x += this.prevIsToTheRight * this.prev.cos * dist * fairDist;
-            this.prev.y += this.prevIsAbove * this.prev.sin * dist * fairDist;
+            this.prev.x += this.prev.cos * dist * fairDist;
+            this.prev.y += this.prev.sin * dist * fairDist;
             this.prev.calcCosSin();
             this.prev.changePrev(dist);
         }
@@ -365,6 +353,8 @@ class Wisp {
 
         this.vertsArr[this.vertsArr.length - 1].dirRight = false;
 
+        //makes the wisp move more to the right/the left every CHANGE_DIR_TIMER miliseconds
+        //used to make the wisp's movements less monotone, as well as makeing it move in a circular manner
         setInterval(() => {
             this.vertsArr[this.vertsArr.length - 1].dirRight = !this.vertsArr[this.vertsArr.length - 1].dirRight;
         }, CHANGE_DIR_TIMER)
