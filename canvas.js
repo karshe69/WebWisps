@@ -9,13 +9,6 @@ class Vector {
     }
 }
 
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-
 class QuadeCurve {
     constructor(start, end, control) {
         this.start = start;
@@ -118,31 +111,22 @@ class Vertebra {
 
         if (this.prev == null) {
 
-            let tempNext = this.next;
+            this.calcNext();
 
-            let nextIsAbove = 1;
-            let nextIsToTheRight = 1;
-            if (tempNext.y < this.y) {
-                nextIsAbove *= -1;
-            }
-            if (tempNext.x < this.x) {
-                nextIsToTheRight *= -1;
-            }
-
-            this.curve1.setStart(this.x - 2 * nextIsToTheRight * this.radius * this.cos, this.y - 2 * nextIsAbove * this.radius * this.sin);
+            this.curve1.setStart(this.x - 2 * this.nextIsToTheRight * this.radius * this.cos, this.y - 2 * this.nextIsAbove * this.radius * this.sin);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
 
 
-            this.curve1.setControlStart(this.x - nextIsAbove * this.radius * this.sin, this.y + nextIsToTheRight * this.radius * this.cos);
-            this.curve2.setControlStart(this.x + nextIsAbove * this.radius * this.sin, this.y - nextIsToTheRight * this.radius * this.cos);
+            this.curve1.setControlStart(this.x - this.nextIsAbove * this.radius * this.sin, this.y + this.nextIsToTheRight * this.radius * this.cos);
+            this.curve2.setControlStart(this.x + this.nextIsAbove * this.radius * this.sin, this.y - this.nextIsToTheRight * this.radius * this.cos);
 
 
 
-            this.curve1.setEnd(tempNext.x - nextIsAbove * tempNext.radius * this.sin, tempNext.y + nextIsToTheRight * tempNext.radius * this.cos);
-            this.curve2.setEnd(tempNext.x + nextIsAbove * tempNext.radius * this.sin, tempNext.y - nextIsToTheRight * tempNext.radius * this.cos);
+            this.curve1.setEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
+            this.curve2.setEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
 
-            this.curve1.setControlEnd(tempNext.x - nextIsAbove * tempNext.radius * this.sin, tempNext.y + nextIsToTheRight * tempNext.radius * this.cos);
-            this.curve2.setControlEnd(tempNext.x + nextIsAbove * tempNext.radius * this.sin, tempNext.y - nextIsToTheRight * tempNext.radius * this.cos);
+            this.curve1.setControlEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
+            this.curve2.setControlEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
 
         }
         else {
@@ -160,31 +144,12 @@ class Vertebra {
 
                 let tempPrev = this.prev;
 
-                let prevIsAbove = 1;
-                let prevIsToTheRight = 1;
-                if (tempPrev.y > this.y) {
-                    prevIsAbove *= -1;
-                }
-                if (tempPrev.x > this.x) {
-                    prevIsToTheRight *= -1;
-                }
+                this.calcPrev();
 
-                this.curve1.setControlStart(this.x - prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y + prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y - prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin);
+                this.curve1.setControlStart(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
+                this.curve2.setControlStart(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
 
-
-                let tempNext = this.vec;
-
-                let nextIsAbove = 1;
-                let nextIsToTheRight = 1;
-                if (tempNext.y + this.y < this.y) {
-                    nextIsAbove *= -1;
-                }
-                if (tempNext.x + this.x < this.x) {
-                    nextIsToTheRight *= -1;
-                }
-
-                this.curve1.setEnd(this.x + prevIsToTheRight * this.radius * this.prev.cos, this.y + prevIsAbove * this.radius * this.prev.sin);
+                this.curve1.setEnd(this.x + this.prevIsToTheRight * this.radius * this.prev.cos, this.y + this.prevIsAbove * this.radius * this.prev.sin);
                 this.curve2.end = this.curve1.end;
 
                 this.curve1.controlEnd = this.curve1.end;
@@ -194,34 +159,18 @@ class Vertebra {
 
                 let tempPrev = this.prev;
 
-                let prevIsAbove = 1;
-                let prevIsToTheRight = 1;
-                if (tempPrev.y > this.y) {
-                    prevIsAbove *= -1;
-                }
-                if (tempPrev.x > this.x) {
-                    prevIsToTheRight *= -1;
-                }
+                this.calcPrev();
 
-                this.curve1.setControlStart(this.x - prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y + prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y - prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin);
+                this.curve1.setControlStart(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
+                this.curve2.setControlStart(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin);
 
-                let tempNext = this.next;
+                this.calcNext();
 
-                let nextIsAbove = 1;
-                let nextIsToTheRight = 1;
-                if (tempNext.y < this.y) {
-                    nextIsAbove *= -1;
-                }
-                if (tempNext.x < this.x) {
-                    nextIsToTheRight *= -1;
-                }
+                this.curve1.setEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
+                this.curve2.setEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
 
-                this.curve1.setEnd(tempNext.x - nextIsAbove * tempNext.radius * this.sin, tempNext.y + nextIsToTheRight * tempNext.radius * this.cos);
-                this.curve2.setEnd(tempNext.x + nextIsAbove * tempNext.radius * this.sin, tempNext.y - nextIsToTheRight * tempNext.radius * this.cos);
-
-                this.curve1.setControlEnd(tempNext.x - nextIsAbove * tempNext.radius * this.sin, tempNext.y + nextIsToTheRight * tempNext.radius * this.cos);
-                this.curve2.setControlEnd(tempNext.x + nextIsAbove * tempNext.radius * this.sin, tempNext.y - nextIsToTheRight * tempNext.radius * this.cos);
+                this.curve1.setControlEnd(this.next.x - this.nextIsAbove * this.next.radius * this.sin, this.next.y + this.nextIsToTheRight * this.next.radius * this.cos);
+                this.curve2.setControlEnd(this.next.x + this.nextIsAbove * this.next.radius * this.sin, this.next.y - this.nextIsToTheRight * this.next.radius * this.cos);
             }
         }
         ctx.strokeStyle = "rgba(0, 255, 0, 1)";
@@ -243,16 +192,7 @@ class Vertebra {
         ctx.stroke();
 
 
-        let tempNext = this.next;
-
-        let nextIsAbove = 1;
-        let nextIsToTheRight = 1;
-        if (tempNext.y < this.y) {
-            nextIsAbove *= -1;
-        }
-        if (tempNext.x < this.x) {
-            nextIsToTheRight *= -1;
-        }
+        this.calcNext();
 
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.beginPath();
@@ -263,34 +203,44 @@ class Vertebra {
         if (this.prev) {
             let tempPrev = this.prev;
 
-            let prevIsAbove = 1;
-            let prevIsToTheRight = 1;
-            if (tempPrev.y > this.y) {
-                prevIsAbove *= -1;
-            }
-            if (tempPrev.x > this.x) {
-                prevIsToTheRight *= -1;
-            }
+
 
             ctx.beginPath();
-            ctx.arc(this.x - prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y + prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x - this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y + this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(this.x + prevIsAbove * this.radius * tempPrev.sin + prevIsToTheRight * this.radius * tempPrev.cos, this.y - prevIsToTheRight * this.radius * tempPrev.cos + prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x + this.prevIsAbove * this.radius * tempPrev.sin + this.prevIsToTheRight * this.radius * tempPrev.cos, this.y - this.prevIsToTheRight * this.radius * tempPrev.cos + this.prevIsAbove * this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
         }
-
     }
 
+    calcPrev() {
+        //1 if previous is above, -1 otherwise; used for angle-dependent calculations
+        this.prevIsAbove = (this.prev.y < this.y)? 1 : -1;
+
+        //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
+        this.prevIsToTheRight = (this.prev.x < this.x)? 1 : -1;
+    }
+
+    calcNext() {
+        //1 if previous is above, -1 otherwise; used for angle-dependent calculations
+        this.nextIsAbove = (this.next.y > this.y)? 1 : -1;
+
+        //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
+        this.nextIsToTheRight = (this.next.x > this.x)? 1 : -1;
+    }
+
+
+    //calculates the cos and sin of this vertabrae.. duh
     calcCosSin() {
         let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
         this.cos = Math.abs(this.x - this.next.x) / dist;
         this.sin = Math.abs(this.y - this.next.y) / dist;
     }
 
-
+    //moves the head of the vertabrae according to the vector, pulling the rest of the vertabrae along in accordance
     move() {
         //intensity of change
         let num = 0.1;
@@ -359,42 +309,34 @@ class Vertebra {
     }
 
 
-
+    //angle of the previous vertabrae to this one
     anglePrev() {
         return Math.atan2((this.y - this.prev.y), (this.x - this.prev.x)) * 180 / Math.PI;
     }
 
+    //angle of the vector to the head
     angleOfVec(vec) {
         return Math.atan2(vec.y, vec.x) * 180 / Math.PI;
     }
 
 
-
+    //moves the rest of the vertabrae in accordance to the head's movement
     changePrev(dist) {
         if (this.prev) {
 
-            let tempPrev = this.prev;
+            this.calcPrev();
 
-            let prevIsAbove = 1;
-            let prevIsToTheRight = 1;
-            if (tempPrev.y > this.y) {
-                prevIsAbove *= -1;
-            }
-            if (tempPrev.x > this.x) {
-                prevIsToTheRight *= -1;
-            }
             let fairDist = 1;
             let distToPrev = Math.sqrt(Math.pow(this.x - this.prev.x, 2) + Math.pow(this.y - this.prev.y, 2));
 
             if (distToPrev < this.radius * 3) {
                 if (distToPrev < this.radius * 2.5) {
-                    console.log('here');
                     return;
                 }
                 fairDist / 4;
             }
-            this.prev.x += prevIsToTheRight * this.prev.cos * dist * fairDist;
-            this.prev.y += prevIsAbove * this.prev.sin * dist * fairDist;
+            this.prev.x += this.prevIsToTheRight * this.prev.cos * dist * fairDist;
+            this.prev.y += this.prevIsAbove * this.prev.sin * dist * fairDist;
             this.prev.calcCosSin();
             this.prev.changePrev(dist);
         }
