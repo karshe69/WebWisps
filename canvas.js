@@ -1,43 +1,13 @@
 const MAX_MAGNITUDE = 7;
 const MOVE_FROM_EDGE_TIME = 500;
 const CHANGE_DIR_TIMER = 10000;
+var c = document.getElementById("canvas");
+var ctx = c.getContext("2d");
 
 class Vector {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-    }
-}
-
-class QuadeCurve {
-    constructor(start, end, control) {
-        this.start = start;
-        this.end = end;
-        this.control = control;
-    }
-
-    static constr(xs, ys, xe, ye, xc, yc) {
-        return new QuadeCurve(new Vector(xs, ys), new Vector(xe, ye), new Vector(xc, yc));
-    }
-
-    setStart = (x, y) => {
-        this.start.x = x;
-        this.start.y = y;
-    }
-
-    setEnd = (x, y) => {
-        this.end.x = x;
-        this.end.y = y;
-    }
-
-    setControl = (x, y) => {
-        this.control.x = x;
-        this.control.y = y;
-    }
-
-    draw(ctx) {
-        ctx.moveTo(this.start.x, this.start.y);
-        ctx.quadraticCurveTo(this.control.x, this.control.y, this.end.x, this.end.y);
     }
 }
 
@@ -73,7 +43,7 @@ class BezierCurve {
         this.controlEnd.y = y;
     }
 
-    draw(ctx) {
+    draw() {
         ctx.moveTo(this.start.x, this.start.y);
         ctx.bezierCurveTo(this.controlStart.x, this.controlStart.y, this.controlEnd.x, this.controlEnd.y, this.end.x, this.end.y);
     }
@@ -99,7 +69,7 @@ class Vertebra {
         return new Vertebra(x, y, radius, null, next);
     }
 
-    draw(ctx) {
+    draw() {
 
 
         if (this.prev == null) {
@@ -152,16 +122,15 @@ class Vertebra {
                 this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
             }
         }
-        this.curve1.draw(ctx)
-        this.curve2.draw(ctx)
-
+        this.curve1.draw()
+        this.curve2.draw()
         if (this.next) {
-            // this.devGraphics(ctx);
-            this.next.draw(ctx);
+            // this.devGraphics();
+            this.next.draw();
         }
     }
 
-    devGraphics(ctx) {
+    devGraphics() {
 
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
@@ -315,7 +284,7 @@ class Wisp {
         let vert = null
         for (let i = 0; i < n; i++) {
             r = this.radius * this.rate(n, i)
-            if (i == 0){
+            if (i == 0) {
                 this.vertebrae.push(new Vertebra(Math.floor(x), y, r, new Vector(0.5, 0), vert))
             }
 
@@ -327,7 +296,7 @@ class Wisp {
             vert = this.vertebrae[i]
             console.log(vert.x);
         }
-        
+
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
@@ -346,14 +315,13 @@ class Wisp {
         return 1 / (1 + 15 * (i / n) * (i / n))
     }
 
-    draw(ctx) {
-        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
+    draw() {
         ctx.beginPath();
+        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
         ctx.fillStyle = "rgba(255, 255, 0, 1)";
-        this.vertebrae[this.n - 1].draw(ctx);
+        this.vertebrae[this.n - 1].draw();
         ctx.stroke();
         ctx.fill();
-
     }
 
     move() {
@@ -368,11 +336,11 @@ class Wisp {
             this.moveWispByDots(dx, dy, vert.prev, ctx);
         }
         else {
-            this.draw(ctx);
+            this.draw();
         }
     }
 
-    moveIfNearEdge(ctx) {
+    moveIfNearEdge() {
         let dist;
 
         //right edge of screen
@@ -440,13 +408,6 @@ class Wisp {
 
 }
 
-wisp = new Wisp(20, 400, 400, 31);
-var c = document.getElementById("canvas");
-var ctx = c.getContext("2d");
-ctx.canvas.width = window.innerWidth;
-ctx.canvas.height = window.innerHeight;
-wisp.draw(ctx);
-
 
 $(window).on('resize', function () {
     var win = $(this); //this = window
@@ -457,15 +418,20 @@ $(window).on('resize', function () {
 setInterval(() => {
     if (!wisp.movingFromEdge) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         wisp.move();
-
-        wisp.moveIfNearEdge(ctx);
-
-        wisp.draw(ctx);
+        wisp.moveIfNearEdge();
+        wisp.draw();
     }
 }, 10);
 
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+function main() {
+    wisp = new Wisp(20, 400, 400, 31);
+    ctx.canvas.width = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
+    wisp.draw();
+}
+main()
