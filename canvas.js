@@ -88,11 +88,10 @@ class Vertebra {
     curve1 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
     curve2 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
 
-    constructor(x, y, radius, contRadius, vec, next) {
+    constructor(x, y, radius, vec, next) {
         this.x = x;
         this.y = y;
         this.radius = radius;
-        this.contRadius = contRadius;
         this.vec = vec;
         this.next = next;
         if (next) {
@@ -100,8 +99,8 @@ class Vertebra {
         }
     }
 
-    static createVert(x, y, radius, contRadius, next) {
-        return new Vertebra(x, y, radius, contRadius, null, next);
+    static createVert(x, y, radius, next) {
+        return new Vertebra(x, y, radius, null, next);
     }
 
     draw(ctx) {
@@ -333,39 +332,60 @@ class Vertebra {
 
 class Wisp {
 
-    constructor() {
-        this.vert4 = new Vertebra(550, 500, 31, 0.95, new Vector(0.5, 0), null);
-        this.vert3 = Vertebra.createVert(450, 500, 26, 0.95, this.vert4);
-        this.vert4.prev = this.vert3;
-        this.vert2 = Vertebra.createVert(342, 500, 22, 0.95, this.vert3);
-        this.vert3.prev = this.vert2;
-        this.vert1 = Vertebra.createVert(268, 500, 18, 0.95, this.vert2);
-        this.vert2.prev = this.vert1;
-        this.vert0 = Vertebra.createVert(200, 500, 15, 0.95, this.vert1);
-        this.vert1.prev = this.vert0;
-        this.vertsArr = [];
-        this.vertsArr.push(this.vert0, this.vert1, this.vert2, this.vert3, this.vert4);
+    // constructor() {
+    //     this.vert4 = new Vertebra(550, 500, 31, 0.95, new Vector(0.5, 0), null);
+    //     this.vert3 = Vertebra.createVert(450, 500, 26, 0.95, this.vert4);
+    //     this.vert4.prev = this.vert3;
+    //     this.vert2 = Vertebra.createVert(342, 500, 22, 0.95, this.vert3);
+    //     this.vert3.prev = this.vert2;
+    //     this.vert1 = Vertebra.createVert(268, 500, 18, 0.95, this.vert2);
+    //     this.vert2.prev = this.vert1;
+    //     this.vert0 = Vertebra.createVert(200, 500, 15, 0.95, this.vert1);
+    //     this.vert1.prev = this.vert0;
+    //     this.vertebrae = [];
+    //     this.vertebrae.push(this.vert0, this.vert1, this.vert2, this.vert3, this.vert4);
+    // }
+
+    constructor(n, x, y, radius) {
+        this.radius = radius
+        this.x = x
+        this.y = y
+        this.vertebrae = []
+        let r = 0
+        let vert = null
+        for (let i = 0; i < n; i++){
+            r = this.radius * this.rate(n, i)
+            this.vertebrae.push(new Vertebra(Math.floor(x), y, r, vert))
+            x -= 2*r
+            if (vert)
+                this.vertebrae[i-1].prev = this.vertebrae[i]
+            vert = this.vertebrae[i]
+        }
 
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
         this.movingFromEdge = false;
 
-        this.vertsArr[this.vertsArr.length - 1].dirRight = false;
+        this.vertebrae[this.vertebrae.length - 1].dirRight = false;
 
         //makes the wisp move more to the right/the left every CHANGE_DIR_TIMER miliseconds
         //used to make the wisp's movements less monotone, as well as makeing it move in a circular manner
         setInterval(() => {
-            this.vertsArr[this.vertsArr.length - 1].dirRight = !this.vertsArr[this.vertsArr.length - 1].dirRight;
+            this.vertebrae[this.vertebrae.length - 1].dirRight = !this.vertebrae[this.vertebrae.length - 1].dirRight;
         }, CHANGE_DIR_TIMER)
     }
 
     draw(ctx) {
-        this.vertsArr[0].draw(ctx);
+        this.vertebrae[0].draw(ctx);
+    }
+
+    rate(n, i){
+        return 1/(1+30*(i/n)*(i/n))
     }
 
     move() {
-        this.vertsArr[this.vertsArr.length - 1].move();
+        this.vertebrae[this.vertebrae.length - 1].move();
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
@@ -384,12 +404,12 @@ class Wisp {
         let dist;
 
         //right edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].x >= ctx.canvas.width) {
+        if (this.vertebrae[this.vertebrae.length - 1].x >= ctx.canvas.width) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(-1 * dist, 0, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(-1 * dist, 0, this.vertebrae[this.vertebrae.length - 1], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -399,12 +419,12 @@ class Wisp {
             }, 10);
         }
         //left edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].x <= 0) {
+        if (this.vertebrae[this.vertebrae.length - 1].x <= 0) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(dist, 0, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(dist, 0, this.vertebrae[this.vertebrae.length - 1], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -414,12 +434,12 @@ class Wisp {
             }, 10);
         }
         //top bottom edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].y >= ctx.canvas.height) {
+        if (this.vertebrae[this.vertebrae.length - 1].y >= ctx.canvas.height) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, -1 * dist, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(0, -1 * dist, this.vertebrae[this.vertebrae.length - 1], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -429,12 +449,12 @@ class Wisp {
             }, 10);
         }
         //bottom edge of screen
-        if (this.vertsArr[this.vertsArr.length - 1].y <= 0) {
+        if (this.vertebrae[this.vertebrae.length - 1].y <= 0) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, dist, this.vertsArr[this.vertsArr.length - 1], ctx)
+                this.moveWispByDots(0, dist, this.vertebrae[this.vertebrae.length - 1], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -448,7 +468,7 @@ class Wisp {
 
 }
 
-wisp = new Wisp();
+wisp = new Wisp(10, 400, 400, 20);
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 ctx.canvas.width = window.innerWidth;
