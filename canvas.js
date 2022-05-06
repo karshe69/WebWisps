@@ -71,7 +71,6 @@ class Vertebra {
 
     draw() {
 
-
         if (this.prev == null) {
 
             this.curve1.setStart(this.x - 2 * this.radius * this.cos, this.y - 2 * this.radius * this.sin);
@@ -123,7 +122,12 @@ class Vertebra {
             }
         }
         this.curve1.draw()
-        this.curve2.draw()
+        this.curve2.draw();
+
+        ctx.lineTo(this.curve1.end.x, this.curve1.end.y);
+        ctx.lineTo(this.curve1.start.x, this.curve1.start.y);
+        ctx.lineTo(this.curve2.start.x, this.curve2.start.y);
+
         if (this.next) {
             // this.devGraphics();
             this.next.draw();
@@ -278,7 +282,6 @@ class Wisp {
         this.radius = radius
         this.x = x
         this.y = y
-        this.n = n
         this.vertebrae = [];
         let r = 0
         let vert = null
@@ -316,11 +319,13 @@ class Wisp {
     }
 
     draw() {
+        // Create gradient
+        var grd = ctx.createLinearGradient(this.vertebrae[this.vertebrae.length - 1].x, this.vertebrae[this.vertebrae.length - 1].y, this.vertebrae[0].x, this.vertebrae[0].y);
+        grd.addColorStop(0, "rgba(100, 0, 255, 0)");
+        grd.addColorStop(1, "rgba(100, 0, 255, 1)");
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
-        ctx.fillStyle = "rgba(255, 255, 0, 1)";
-        this.vertebrae[this.n - 1].draw();
-        ctx.stroke();
+        ctx.fillStyle = grd;
+        this.vertebrae[this.vertebrae.length - 1].draw();
         ctx.fill();
     }
 
@@ -404,8 +409,29 @@ class Wisp {
             }, 10);
         }
     }
+}
 
+class Particle {
+    constructor(x, y, radius, lifeSpan, dirVec) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.lifeSpan = lifeSpan;
+        this.life = this.lifeSpan;
+        this.dirVec = new Vector(dirVec.x * getRndInteger(0, 4)-2, dirVec.y * getRndInteger(0, 4)-2);
+    }
 
+    update() {
+        this.x += this.dirVec.x;
+        this.y += this.dirVec.y;
+        this.radius *= this.life/this.lifeSpan
+        this.life -= 10;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+    }
 }
 
 
