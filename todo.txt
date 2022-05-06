@@ -4,3 +4,4 @@ TODO:
     rework movement
         bias for edges of screen
     splitting wisps
+    control points bug

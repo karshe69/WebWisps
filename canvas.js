@@ -6,6 +6,7 @@ var ctx = c.getContext("2d");
 
 var jumpCorrect = true;
 var devgraph = false;
+var fill = true;
 
 class Vector {
     constructor(x, y) {
@@ -50,6 +51,10 @@ class BezierCurve {
         ctx.moveTo(this.start.x, this.start.y);
         ctx.bezierCurveTo(this.controlStart.x, this.controlStart.y, this.controlEnd.x, this.controlEnd.y, this.end.x, this.end.y);
     }
+    drawBack() {
+        ctx.moveTo(this.end.x, this.end.y);
+        ctx.bezierCurveTo(this.controlEnd.x, this.controlEnd.y, this.controlStart.x, this.controlStart.y, this.start.x, this.start.y);
+    }
 }
 
 class Vertebra {
@@ -80,7 +85,6 @@ class Vertebra {
             var cosNextR = this.next.radius * this.cos;
         }
         if (this.prev == null) {
-
             this.curve1.setStart(this.x - 2 * cosR, this.y - 2 * sinR);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
 
@@ -97,12 +101,14 @@ class Vertebra {
         else {
             this.curve1.start = this.prev.curve1.end;
             this.curve2.start = this.prev.curve2.end;
+            var prevSinR = this.radius * this.prev.sin;
+            var prevCosR = this.radius * this.prev.cos;
 
-            this.curve1.setControlStart(this.x - this.radius * this.prev.sin + this.radius * this.prev.cos, this.y + this.radius * this.prev.cos + this.radius * this.prev.sin);
-            this.curve2.setControlStart(this.x + this.radius * this.prev.sin + this.radius * this.prev.cos, this.y - this.radius * this.prev.cos + this.radius * this.prev.sin);
+            this.curve1.setControlStart(this.x - prevSinR + prevCosR, this.y + prevCosR + prevSinR);
+            this.curve2.setControlStart(this.x + prevSinR + prevCosR, this.y - prevCosR + prevSinR);
 
             if (this.next == null) {
-                this.curve1.setEnd(this.x + this.radius * this.prev.cos, this.y + this.radius * this.prev.sin);
+                this.curve1.setEnd(this.x + prevCosR, this.y + prevSinR);
                 this.curve2.end = this.curve1.end;
 
                 this.curve1.controlEnd = this.curve1.end;
@@ -117,15 +123,11 @@ class Vertebra {
             }
         }
         this.curve1.draw()
-        this.curve2.draw();
-
-        ctx.lineTo(this.curve1.end.x, this.curve1.end.y);
+        ctx.lineTo(this.curve2.end.x, this.curve2.end.y);
+        this.curve2.drawBack();
         ctx.lineTo(this.curve1.start.x, this.curve1.start.y);
-        ctx.lineTo(this.curve2.start.x, this.curve2.start.y);
 
         if (this.next) {
-            if (devgraph)
-                this.devGraphics();
             this.next.draw();
         }
     }
@@ -135,16 +137,18 @@ class Vertebra {
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
 
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.next.x, this.next.y);
-        ctx.stroke();
-
         if (this.prev) {
             ctx.arc(this.x - this.radius * this.prev.sin + this.radius * this.prev.cos, this.y + this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
             ctx.arc(this.x + this.radius * this.prev.sin + this.radius * this.prev.cos, this.y - this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
+        }
+        if (this.next) {
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.next.x, this.next.y);
+            ctx.stroke();
+            this.next.devGraphics();
         }
     }
 
@@ -159,9 +163,7 @@ class Vertebra {
     move() {
         //intensity of change
         let num = 0.1;
-
         let type = getRndInt(1, 3);
-
         let positive, magnitude, newVec;
 
 
@@ -180,8 +182,6 @@ class Vertebra {
                 else if (!this.dirRight && num < 0) {
                     num *= 2;
                 }
-
-
 
                 //check if new vector's magnitude is smaller than max magnitude
                 magnitude = Math.sqrt(Math.pow(this.vec.x + num, 2) + Math.pow(this.vec.y, 2));
@@ -306,9 +306,17 @@ class Wisp {
         grd.addColorStop(0, "rgba(100, 0, 255, 0)");
         grd.addColorStop(1, "rgba(100, 0, 255, 1)");
         ctx.beginPath();
-        ctx.fillStyle = grd;
         this.vertebrae[this.vertebrae.length - 1].draw();
-        ctx.fill();
+        if (fill) {
+            ctx.fillStyle = grd;
+            ctx.fill();
+        }
+        else {
+            ctx.strokeStyle = grd;
+            ctx.stroke();
+        }
+        if (devgraph)
+            this.vertebrae[this.vertebrae.length - 1].devGraphics();
     }
 
     move() {
