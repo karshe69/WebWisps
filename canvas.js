@@ -4,6 +4,9 @@ const CHANGE_DIR_TIMER = 10000;
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 
+var jumpCorrect = true;
+var devgraph = false;
+
 class Vector {
     constructor(x, y) {
         this.x = x;
@@ -70,37 +73,35 @@ class Vertebra {
     }
 
     draw() {
-
+        var sinR = this.radius * this.sin;
+        var cosR = this.radius * this.cos;
+        if (this.next) {
+            var sinNextR = this.next.radius * this.sin;
+            var cosNextR = this.next.radius * this.cos;
+        }
         if (this.prev == null) {
 
-            this.curve1.setStart(this.x - 2 * this.radius * this.cos, this.y - 2 * this.radius * this.sin);
+            this.curve1.setStart(this.x - 2 * cosR, this.y - 2 * sinR);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
 
-            this.curve1.setControlStart(this.x - this.radius * this.sin, this.y + this.radius * this.cos);
-            this.curve2.setControlStart(this.x + this.radius * this.sin, this.y - this.radius * this.cos);
+            this.curve1.setControlStart(this.x - sinR, this.y + cosR);
+            this.curve2.setControlStart(this.x + sinR, this.y - cosR);
 
-            this.curve1.setEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
-            this.curve2.setEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
+            this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
+            this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
 
-            this.curve1.setControlEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
-            this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
+            this.curve1.setControlEnd(this.next.x - sinNextR, this.next.y + cosNextR);
+            this.curve2.setControlEnd(this.next.x + sinNextR, this.next.y - cosNextR);
 
         }
         else {
             this.curve1.start = this.prev.curve1.end;
             this.curve2.start = this.prev.curve2.end;
 
+            this.curve1.setControlStart(this.x - this.radius * this.prev.sin + this.radius * this.prev.cos, this.y + this.radius * this.prev.cos + this.radius * this.prev.sin);
+            this.curve2.setControlStart(this.x + this.radius * this.prev.sin + this.radius * this.prev.cos, this.y - this.radius * this.prev.cos + this.radius * this.prev.sin);
+
             if (this.next == null) {
-
-                let dist = Math.sqrt(Math.pow(this.x - this.vec.x, 2) + Math.pow(this.y - this.vec.y, 2));
-                this.cos = (this.x - this.vec.x) / dist;
-                this.sin = (this.y - this.vec.y) / dist;
-
-                let tempPrev = this.prev;
-
-                this.curve1.setControlStart(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin);
-
                 this.curve1.setEnd(this.x + this.radius * this.prev.cos, this.y + this.radius * this.prev.sin);
                 this.curve2.end = this.curve1.end;
 
@@ -108,17 +109,11 @@ class Vertebra {
                 this.curve2.controlEnd = this.curve1.end;
             }
             else {
+                this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
+                this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
 
-                let tempPrev = this.prev;
-
-                this.curve1.setControlStart(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin);
-                this.curve2.setControlStart(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin);
-
-                this.curve1.setEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
-                this.curve2.setEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
-
-                this.curve1.setControlEnd(this.next.x - this.next.radius * this.sin, this.next.y + this.next.radius * this.cos);
-                this.curve2.setControlEnd(this.next.x + this.next.radius * this.sin, this.next.y - this.next.radius * this.cos);
+                this.curve1.setControlEnd(this.next.x - sinNextR, this.next.y + cosNextR);
+                this.curve2.setControlEnd(this.next.x + sinNextR, this.next.y - cosNextR);
             }
         }
         this.curve1.draw()
@@ -129,13 +124,13 @@ class Vertebra {
         ctx.lineTo(this.curve2.start.x, this.curve2.start.y);
 
         if (this.next) {
-            // this.devGraphics();
+            if (devgraph)
+                this.devGraphics();
             this.next.draw();
         }
     }
 
     devGraphics() {
-
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
@@ -145,34 +140,19 @@ class Vertebra {
         ctx.stroke();
 
         if (this.prev) {
-            let tempPrev = this.prev;
-
-
-
-            ctx.arc(this.x - this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y + this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x - this.radius * this.prev.sin + this.radius * this.prev.cos, this.y + this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
 
-            ctx.arc(this.x + this.radius * tempPrev.sin + this.radius * tempPrev.cos, this.y - this.radius * tempPrev.cos + this.radius * tempPrev.sin, 5, 0, 2 * Math.PI);
+            ctx.arc(this.x + this.radius * this.prev.sin + this.radius * this.prev.cos, this.y - this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
             ctx.stroke();
-
         }
     }
 
-    calcNext() {
-        //1 if previous is above, -1 otherwise; used for angle-dependent calculations
-        this.nextIsAbove = (this.next.y > this.y) ? 1 : -1;
-
-        //1 if previous is to the right, -1 otherwise; used for angle-dependent calculations
-        this.nextIsToTheRight = (this.next.x > this.x) ? 1 : -1;
-    }
-
-
-    //calculates the cos and sin of this vertabrae.. duh
+    //calculates the cos and sin of this vertabrae ahead of time for faster computations.
     calcCosSin() {
-        this.calcNext();
         let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
-        this.cos = this.nextIsToTheRight * Math.abs(this.x - this.next.x) / dist;
-        this.sin = this.nextIsAbove * Math.abs(this.y - this.next.y) / dist;
+        this.cos = (this.next.x - this.x) / dist;
+        this.sin = (this.next.y - this.y) / dist;
     }
 
     //moves the head of the vertabrae according to the vector, pulling the rest of the vertabrae along in accordance
@@ -180,7 +160,7 @@ class Vertebra {
         //intensity of change
         let num = 0.1;
 
-        let type = getRndInteger(1, 3);
+        let type = getRndInt(1, 3);
 
         let positive, magnitude, newVec;
 
@@ -189,7 +169,7 @@ class Vertebra {
             //change x of movement vector
             case 1:
                 //0 = decrease, 1 = increase
-                positive = getRndInteger(0, 1);
+                positive = getRndInt(0, 1);
                 if (positive == 0) {
                     num *= -1;
 
@@ -218,7 +198,7 @@ class Vertebra {
             //change y of movement vector
             case 2:
                 //0 = decrease, 1 = increase
-                positive = getRndInteger(0, 1);
+                positive = getRndInt(0, 1);
                 if (positive == 0) {
                     num *= -1;
                 }
@@ -241,6 +221,8 @@ class Vertebra {
         this.y += this.vec.y;
 
         this.changePrev(dist);
+        if (jumpCorrect)
+            wisp.moveIfNearEdge();
     }
 
 
@@ -346,60 +328,32 @@ class Wisp {
     }
 
     moveIfNearEdge() {
-        let dist;
+        let dist = 0;
+        let x = 0;
+        let y = 0;
 
-        //right edge of screen
         if (this.vertebrae[0].x >= ctx.canvas.width) {
-            this.movingFromEdge = true;
-            this.interval = setInterval(() => {
-                dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(-1 * dist, 0, this.vertebrae[0], ctx)
-                this.moveEdgeTimer += 10;
-                if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
-                    this.moveEdgeTimer = 0;
-                    this.movingFromEdge = false;
-                    clearInterval(this.interval);
-                }
-            }, 10);
+            dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
+            x = -1;
         }
-        //left edge of screen
         if (this.vertebrae[0].x <= 0) {
-            this.movingFromEdge = true;
-            this.interval = setInterval(() => {
-                dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(dist, 0, this.vertebrae[0], ctx)
-                this.moveEdgeTimer += 10;
-                if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
-                    this.moveEdgeTimer = 0;
-                    this.movingFromEdge = false;
-                    clearInterval(this.interval);
-                }
-            }, 10);
+            dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
+            x = 1;
         }
-        //top bottom edge of screen
         if (this.vertebrae[0].y >= ctx.canvas.height) {
-            this.movingFromEdge = true;
-            this.interval = setInterval(() => {
-                dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, -1 * dist, this.vertebrae[0], ctx)
-                this.moveEdgeTimer += 10;
-                if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
-                    this.moveEdgeTimer = 0;
-                    this.movingFromEdge = false;
-                    clearInterval(this.interval);
-                }
-            }, 10);
+            dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
+            y = -1;
         }
-        //bottom edge of screen
         if (this.vertebrae[0].y <= 0) {
+            dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
+            y = 1;
+        }
+
+        if (dist) {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
-                dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(0, dist, this.vertebrae[0], ctx)
+                this.moveWispByDots(x * dist, y * dist, this.vertebrae[0], ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
@@ -418,13 +372,13 @@ class Particle {
         this.radius = radius;
         this.lifeSpan = lifeSpan;
         this.life = this.lifeSpan;
-        this.dirVec = new Vector(dirVec.x * getRndInteger(0, 4)-2, dirVec.y * getRndInteger(0, 4)-2);
+        this.dirVec = new Vector(dirVec.x * getRndInt(0, 4) - 2, dirVec.y * getRndInt(0, 4) - 2);
     }
 
     update() {
         this.x += this.dirVec.x;
         this.y += this.dirVec.y;
-        this.radius *= this.life/this.lifeSpan
+        this.radius *= this.life / this.lifeSpan
         this.life -= 10;
     }
 
@@ -445,12 +399,11 @@ setInterval(() => {
     if (!wisp.movingFromEdge) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         wisp.move();
-        wisp.moveIfNearEdge();
         wisp.draw();
     }
 }, 10);
 
-function getRndInteger(min, max) {
+function getRndInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
@@ -458,6 +411,5 @@ function main() {
     wisp = new Wisp(20, 400, 400, 31);
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
-    wisp.draw();
 }
 main()

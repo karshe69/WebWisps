@@ -1,0 +1,6 @@
+TODO:
+    dev graphics
+    particle shit
+    rework movement
+        bias for edges of screen
+    splitting wisps
