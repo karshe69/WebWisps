@@ -1,7 +1,14 @@
 TODO:
-    dev graphics
-    particle shit
-    rework movement
-        bias for edges of screen
-    splitting wisps
     control points bug
+    dev graphics
+    menu
+    
+    particle shit
+    movement bias
+    splitting wisps
+
+
+TODO LATER:
+    hash procedual background
+    bias movement towards mouse
+    keyboard movement (left & right)

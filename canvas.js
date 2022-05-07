@@ -1,6 +1,4 @@
-const MAX_MAGNITUDE = 7;
 const MOVE_FROM_EDGE_TIME = 500;
-const CHANGE_DIR_TIMER = 10000;
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 
@@ -12,6 +10,29 @@ class Vector {
     constructor(x, y) {
         this.x = x;
         this.y = y;
+    }
+}
+
+class RadianVector {
+    constructor(angle, magnitude) {
+        this.angle = angle;
+        this.magnitude = magnitude;
+    }
+
+    getX() {
+        return this.magnitude * Math.cos(this.angle)
+    }
+
+    getY() {
+        return this.magnitude * Math.sin(this.angle)
+    }
+
+    addAngle(angle) {
+        this.angle += angle;
+        if (this.angle > 3.142)
+            this.angle -= 2 * Math.PI
+        if (this.angle < -3.142)
+            this.angle += 2 * Math.PI
     }
 }
 
@@ -74,7 +95,7 @@ class Vertebra {
     }
 
     static createVert(x, y, radius, next) {
-        return new Vertebra(x, y, radius, null, next);
+        return new Vertebra(x, y, radius, new RadianVector(0, next.vec.magnitude), next);
     }
 
     draw() {
@@ -84,6 +105,7 @@ class Vertebra {
             var sinNextR = this.next.radius * this.sin;
             var cosNextR = this.next.radius * this.cos;
         }
+
         if (this.prev == null) {
             this.curve1.setStart(this.x - 2 * cosR, this.y - 2 * sinR);
             this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
@@ -154,148 +176,67 @@ class Vertebra {
 
     //calculates the cos and sin of this vertabrae ahead of time for faster computations.
     calcCosSin() {
+        if(!this.next)
+            return;
         let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
         this.cos = (this.next.x - this.x) / dist;
         this.sin = (this.next.y - this.y) / dist;
     }
 
-    //moves the head of the vertabrae according to the vector, pulling the rest of the vertabrae along in accordance
-    move() {
-        //intensity of change
-        let num = 0.1;
-        let type = getRndInt(1, 3);
-        let positive, magnitude, newVec;
-
-
-        switch (type) {
-            //change x of movement vector
-            case 1:
-                //0 = decrease, 1 = increase
-                positive = getRndInt(0, 1);
-                if (positive == 0) {
-                    num *= -1;
-
-                }
-                if (this.dirRight && num > 0) {
-                    num *= 2;
-                }
-                else if (!this.dirRight && num < 0) {
-                    num *= 2;
-                }
-
-                //check if new vector's magnitude is smaller than max magnitude
-                magnitude = Math.sqrt(Math.pow(this.vec.x + num, 2) + Math.pow(this.vec.y, 2));
-
-                if (magnitude <= MAX_MAGNITUDE && magnitude >= 0.5) {
-
-                    newVec = new Vector(this.vec.x + num, this.vec.y);
-                    if (Math.abs(this.anglePrev() - this.angleOfVec(newVec)) < 50) {
-                        this.vec.x += num;
-                    }
-                }
-                break;
-
-            //change y of movement vector
-            case 2:
-                //0 = decrease, 1 = increase
-                positive = getRndInt(0, 1);
-                if (positive == 0) {
-                    num *= -1;
-                }
-
-                //check if new vector's magnitude is smaller than max magnitude
-                magnitude = Math.sqrt(Math.pow(this.vec.x, 2) + Math.pow(this.vec.y + num, 2));
-                if (magnitude <= MAX_MAGNITUDE && magnitude > 0.5) {
-
-                    newVec = new Vector(this.vec.x, this.vec.y + num);
-
-                    if (Math.abs(this.anglePrev() - this.angleOfVec(newVec)) < 50) {
-                        this.vec.y += num;
-                    }
-                }
-                break;
-        }
-
-        let dist = Math.sqrt(Math.pow(this.vec.x, 2) + Math.pow(this.vec.y, 2));
-        this.x += this.vec.x;
-        this.y += this.vec.y;
-
-        this.changePrev(dist);
-        if (jumpCorrect)
-            wisp.moveIfNearEdge();
-    }
-
-
-    //angle of the previous vertabrae to this one
-    anglePrev() {
-        return Math.atan2((this.y - this.prev.y), (this.x - this.prev.x)) * 180 / Math.PI;
-    }
-
-    //angle of the vector to the head
-    angleOfVec(vec) {
-        return Math.atan2(vec.y, vec.x) * 180 / Math.PI;
-    }
-
-
     //moves the rest of the vertabrae in accordance to the head's movement
-    changePrev(dist) {
-        if (this.prev) {
+    move() {
+        if (this.next) {
+            let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
 
-            let fairDist = 1;
-            let distToPrev = Math.sqrt(Math.pow(this.x - this.prev.x, 2) + Math.pow(this.y - this.prev.y, 2));
-
-            if (distToPrev < this.radius * 3) {
-                if (distToPrev < this.radius * 2.5) {
-                    return;
-                }
-                fairDist / 4;
+            if (dist < this.radius * 2.5) {
+                return;
             }
-            this.prev.x += this.prev.cos * dist * fairDist;
-            this.prev.y += this.prev.sin * dist * fairDist;
-            this.prev.calcCosSin();
-            this.prev.changePrev(dist);
         }
+        this.x += this.vec.getX();
+        this.y += this.vec.getY();
+        this.calcCosSin();
+        if (this.prev) {
+            this.prev.move();
+        }
+    }
+
+    changeDirection(){
+        if(this.next)
+            this.vec.angle = Math.atan2(this.next.y - this.y, this.next.x - this.x)
+        if(this.prev)
+            this.prev.changeDirection();
     }
 }
 
 class Wisp {
-
-    constructor(n, x, y, radius) {
+    constructor(n, x, y, radius, speed) {
+        this.time = 0;
+        this.MAX_ANGLE = 0.016;
         this.radius = radius
-        this.x = x
-        this.y = y
         this.vertebrae = [];
         let r = 0
         let vert = null
         for (let i = 0; i < n; i++) {
             r = this.radius * this.rate(n, i)
             if (i == 0) {
-                this.vertebrae.push(new Vertebra(Math.floor(x), y, r, new Vector(0.5, 0), vert))
+                this.vertebrae.push(new Vertebra(Math.floor(x), y, r, new RadianVector(0, speed), vert))
             }
 
             else
                 this.vertebrae.push(Vertebra.createVert(Math.floor(x), y, r, vert))
-            x -= 1 * r
+            x -= 2.5 * r
             if (vert)
                 vert.prev = this.vertebrae[i]
             vert = this.vertebrae[i]
-            console.log(vert.x);
         }
 
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
         this.movingFromEdge = false;
-
-        this.vertebrae[0].dirRight = false;
-
-        //makes the wisp move more to the right/the left every CHANGE_DIR_TIMER miliseconds
-        //used to make the wisp's movements less monotone, as well as makeing it move in a circular manner
-        setInterval(() => {
-            this.vertebrae[0].dirRight = !this.vertebrae[0].dirRight;
-        }, CHANGE_DIR_TIMER)
     }
 
+    // rate between radius of vertebras
     rate(n, i) {
         return 1 / (1 + 15 * (i / n) * (i / n))
     }
@@ -320,7 +261,26 @@ class Wisp {
     }
 
     move() {
+        this.changeDirection();
         this.vertebrae[0].move();
+        if (jumpCorrect)
+            wisp.moveIfNearEdge();
+    }
+
+    changeDirection() {
+        this.changeHeadDirection();
+        this.vertebrae[0].changeDirection();
+    }
+
+    changeHeadDirection(){
+        this.time += getRnd(0, 0.01);
+        let change = this.directionFunction(this.time)
+        this.vertebrae[0].vec.addAngle(change);
+
+    }
+
+    directionFunction(x){
+        return 0.016/4*(Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
@@ -412,11 +372,15 @@ setInterval(() => {
 }, 10);
 
 function getRndInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    return Math.floor(getRnd(min, max));
+}
+
+function getRnd(min, max){
+    return (Math.random() * (max - min)) + min;
 }
 
 function main() {
-    wisp = new Wisp(20, 400, 400, 31);
+    wisp = new Wisp(20, 400, 400, 31, 3);
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
 }
