@@ -7,8 +7,17 @@ var devgraph = false;
 var fill = true;
 
 $("#devGraphicsCheck").change(function () {
-    devgraph = !devgraph;
+    if ($("#devGraphicsCheck").is(":checked")) {
+        devgraph = true;
+        fill = false;
+    }
+    else {
+        devgraph = false;
+        fill = true;
+    }
 });
+
+
 
 class Vector {
     constructor(x, y) {
@@ -130,36 +139,46 @@ class Vertebra {
             var prevSinR = this.radius * this.prev.sin;
             var prevCosR = this.radius * this.prev.cos;
 
-            this.curve1.setControlStart(this.x - prevSinR + prevCosR, this.y + prevCosR + prevSinR);
-            this.curve2.setControlStart(this.x + prevSinR + prevCosR, this.y - prevCosR + prevSinR);
+
 
             if (this.next == null) {
+                this.curve1.setControlStart(this.x - prevSinR + prevCosR, this.y + prevCosR + prevSinR);
+                this.curve2.setControlStart(this.x + prevSinR + prevCosR, this.y - prevCosR + prevSinR);
+
                 this.curve1.setEnd(this.x + prevCosR, this.y + prevSinR);
                 this.curve2.end = this.curve1.end;
 
                 this.curve1.controlEnd = this.curve1.end;
-                this.curve2.controlEnd = this.curve1.end;
+                this.curve2.controlEnd = this.curve2.end;
             }
             else {
+                this.curve1.setControlStart(this.sin * this.sin * (this.curve1.start.x + this.curve1.end.x) / 2 + this.cos * this.cos * (this.curve1.start.x * this.radius + this.curve1.end.x * this.next.radius) / (this.radius + this.next.radius),
+                    this.cos * this.cos * (this.curve1.start.y + this.curve1.end.y) / 2 + this.sin * this.sin * (this.curve1.start.y * this.radius + this.curve1.end.y * this.next.radius) / (this.radius + this.next.radius));
+                this.curve2.setControlStart(this.sin * this.sin * (this.curve2.start.x + this.curve2.end.x) / 2 + this.cos * this.cos * (this.curve2.start.x * this.radius + this.curve2.end.x * this.next.radius) / (this.radius + this.next.radius),
+                    this.cos * this.cos * (this.curve2.start.y + this.curve2.end.y) / 2 + this.sin * this.sin * (this.curve2.start.y * this.radius + this.curve2.end.y * this.next.radius) / (this.radius + this.next.radius));
                 this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
                 this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
-
-                this.curve1.setControlEnd(this.next.x - sinNextR, this.next.y + cosNextR);
-                this.curve2.setControlEnd(this.next.x + sinNextR, this.next.y - cosNextR);
             }
+            this.prev.endcontrol()
         }
-        this.curve1.draw()
-        ctx.lineTo(this.curve2.end.x, this.curve2.end.y);
-        this.curve2.drawBack();
-        ctx.lineTo(this.curve1.start.x, this.curve1.start.y);
 
         if (this.next) {
             this.next.draw();
         }
+
+        this.curve1.draw()
+        ctx.lineTo(this.curve2.end.x, this.curve2.end.y);
+        this.curve2.drawBack();
+        ctx.lineTo(this.curve1.start.x, this.curve1.start.y);
+    }
+
+    endcontrol() {
+        this.curve1.controlEnd = this.curve1.end;
+        this.curve2.controlEnd = this.curve2.end;
     }
 
     devGraphics() {
-        let radius = this.radius/7;
+        let radius = this.radius / 7;
         ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
@@ -176,16 +195,16 @@ class Vertebra {
         ctx.arc(this.curve1.controlEnd.x, this.curve1.controlEnd.y, radius, 0, 2 * Math.PI);
         ctx.arc(this.curve2.controlEnd.x, this.curve2.controlEnd.y, radius, 0, 2 * Math.PI);
 
-        ctx.stroke();   
+        ctx.stroke();
         ctx.beginPath();
         ctx.strokeStyle = "rgba(125, 225, 250, 1)";
         ctx.moveTo(this.x, this.y);
-        if (this.next) {   
+        if (this.next) {
             ctx.lineTo(this.next.x, this.next.y);
             ctx.stroke();
             this.next.devGraphics();
         }
-        else{
+        else {
             ctx.lineTo(this.x + 20 * this.vec.getX(), this.y + 20 * this.vec.getY())
             ctx.stroke();
         }

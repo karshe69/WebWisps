@@ -1,10 +1,12 @@
 TODO:
     control points bug
-    menu
+        remake the endcontrol point via endcontrol() (line 175)
+            this control point needs to be on the same line as this.next.curve.startcontrol and this.curve.end and somewhat close to this.curve.end
     
     particle shit
     movement bias
     splitting wisps
+    menu
 
 
 TODO LATER:
