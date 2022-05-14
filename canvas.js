@@ -6,6 +6,10 @@ var jumpCorrect = true;
 var devgraph = false;
 var fill = true;
 
+$("#devGraphicsCheck").change(function () {
+    devgraph = !devgraph;
+});
+
 class Vector {
     constructor(x, y) {
         this.x = x;
@@ -174,9 +178,9 @@ class Vertebra {
         }
     }
 
-    //calculates the cos and sin of this vertabrae ahead of time for faster computations.
+    //calculates the cos and sin of this vertabrae
     calcCosSin() {
-        if(!this.next)
+        if (!this.next)
             return;
         let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
         this.cos = (this.next.x - this.x) / dist;
@@ -200,10 +204,10 @@ class Vertebra {
         }
     }
 
-    changeDirection(){
-        if(this.next)
+    changeDirection() {
+        if (this.next)
             this.vec.angle = Math.atan2(this.next.y - this.y, this.next.x - this.x)
-        if(this.prev)
+        if (this.prev)
             this.prev.changeDirection();
     }
 }
@@ -272,15 +276,15 @@ class Wisp {
         this.vertebrae[0].changeDirection();
     }
 
-    changeHeadDirection(){
+    changeHeadDirection() {
         this.time += getRnd(0, 0.01);
         let change = this.directionFunction(this.time)
         this.vertebrae[0].vec.addAngle(change);
 
     }
 
-    directionFunction(x){
-        return 0.016/4*(Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
+    directionFunction(x) {
+        return 0.016 / 4 * (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
@@ -375,7 +379,7 @@ function getRndInt(min, max) {
     return Math.floor(getRnd(min, max));
 }
 
-function getRnd(min, max){
+function getRnd(min, max) {
     return (Math.random() * (max - min)) + min;
 }
 

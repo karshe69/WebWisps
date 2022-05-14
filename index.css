@@ -32,6 +32,17 @@ body {
     position: absolute;
 }
 
+.sideBarCheckbox {
+    margin-left: 20px;
+    margin-top: 40px;
+    transform: scale(1.2);
+}
+
+.sideBarLabel {
+    padding-left: 20px;
+    color: white;
+}
+
 #barIconClose {
     padding-left: 10px;
     padding-top: 10px;
