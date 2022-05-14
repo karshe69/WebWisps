@@ -4,7 +4,7 @@ var ctx = c.getContext("2d");
 
 var jumpCorrect = true;
 var devgraph = false;
-var fill = true;
+var fill = false;
 
 $("#devGraphicsCheck").change(function () {
     if ($("#devGraphicsCheck").is(":checked")) {
@@ -152,10 +152,10 @@ class Vertebra {
                 this.curve2.controlEnd = this.curve2.end;
             }
             else {
-                this.curve1.setControlStart(this.sin * this.sin * (this.curve1.start.x + this.curve1.end.x) / 2 + this.cos * this.cos * (this.curve1.start.x * this.radius + this.curve1.end.x * this.next.radius) / (this.radius + this.next.radius),
-                    this.cos * this.cos * (this.curve1.start.y + this.curve1.end.y) / 2 + this.sin * this.sin * (this.curve1.start.y * this.radius + this.curve1.end.y * this.next.radius) / (this.radius + this.next.radius));
-                this.curve2.setControlStart(this.sin * this.sin * (this.curve2.start.x + this.curve2.end.x) / 2 + this.cos * this.cos * (this.curve2.start.x * this.radius + this.curve2.end.x * this.next.radius) / (this.radius + this.next.radius),
-                    this.cos * this.cos * (this.curve2.start.y + this.curve2.end.y) / 2 + this.sin * this.sin * (this.curve2.start.y * this.radius + this.curve2.end.y * this.next.radius) / (this.radius + this.next.radius));
+                this.curve1.setControlStart(this.sin ** 2 * (this.curve1.start.x + this.curve1.end.x) / 2 + this.cos ** 2 * (this.curve1.start.x * this.radius + this.curve1.end.x * this.next.radius) / (this.radius + this.next.radius),
+                    this.cos ** 2 * (this.curve1.start.y + this.curve1.end.y) / 2 + this.sin ** 2 * (this.curve1.start.y * this.radius + this.curve1.end.y * this.next.radius) / (this.radius + this.next.radius));
+                this.curve2.setControlStart(this.sin ** 2 * (this.curve2.start.x + this.curve2.end.x) / 2 + this.cos ** 2 * (this.curve2.start.x * this.radius + this.curve2.end.x * this.next.radius) / (this.radius + this.next.radius),
+                    this.cos ** 2 * (this.curve2.start.y + this.curve2.end.y) / 2 + this.sin ** 2 * (this.curve2.start.y * this.radius + this.curve2.end.y * this.next.radius) / (this.radius + this.next.radius));
                 this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
                 this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
             }
@@ -173,8 +173,14 @@ class Vertebra {
     }
 
     endcontrol() {
-        this.curve1.controlEnd = this.curve1.end;
-        this.curve2.controlEnd = this.curve2.end;
+        let dist = Math.sqrt((this.curve1.end.x - this.next.curve1.controlStart.x) ** 2 + (this.curve1.end.y - this.next.curve1.controlStart.y) ** 2)
+        console.log(this.curve1.end, this.next.curve1.controlStart, dist);
+        console.log(this.curve1.end.x, this.curve1.end.x + this.radius / 10 * (this.next.curve1.controlStart.x - this.curve1.end.x) / dist);
+        this.curve1.controlEnd.x = this.curve1.end.x + this.radius / 2 * (this.curve1.end.x - this.next.curve1.controlStart.x) / dist;
+        this.curve1.controlEnd.y = this.curve1.end.y + this.radius / 2 * (this.curve1.end.y - this.next.curve1.controlStart.y) / dist;
+        dist = Math.sqrt((this.curve2.end.x - this.next.curve2.controlStart.x) ** 2 + (this.curve2.end.y - this.next.curve2.controlStart.y) ** 2)
+        this.curve2.controlEnd.x = this.curve2.end.x + this.radius / 2 * (this.curve2.end.x - this.next.curve2.controlStart.x) / dist;
+        this.curve2.controlEnd.y = this.curve2.end.y + this.radius / 2 * (this.curve2.end.y - this.next.curve2.controlStart.y) / dist;
     }
 
     devGraphics() {
@@ -194,9 +200,15 @@ class Vertebra {
         ctx.strokeStyle = "rgba(200, 100, 255, 1)";
         ctx.arc(this.curve1.controlEnd.x, this.curve1.controlEnd.y, radius, 0, 2 * Math.PI);
         ctx.arc(this.curve2.controlEnd.x, this.curve2.controlEnd.y, radius, 0, 2 * Math.PI);
-
         ctx.stroke();
         ctx.beginPath();
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+        ctx.arc(this.curve1.end.x, this.curve1.end.y, radius, 0, 2 * Math.PI);
+        ctx.arc(this.curve2.end.x, this.curve2.end.y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+
         ctx.strokeStyle = "rgba(125, 225, 250, 1)";
         ctx.moveTo(this.x, this.y);
         if (this.next) {
@@ -316,7 +328,7 @@ class Wisp {
     }
 
     directionFunction(x) {
-        return 0.016 / 4 * (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
+        return this.MAX_ANGLE / 4 * (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
