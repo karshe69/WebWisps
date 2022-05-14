@@ -1,6 +1,5 @@
 TODO:
     control points bug
-    dev graphics
     menu
     
     particle shit

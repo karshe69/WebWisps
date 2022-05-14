@@ -159,22 +159,35 @@ class Vertebra {
     }
 
     devGraphics() {
+        let radius = this.radius/7;
+        ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
+        ctx.beginPath();
 
-        if (this.prev) {
-            ctx.arc(this.x - this.radius * this.prev.sin + this.radius * this.prev.cos, this.y + this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
-            ctx.stroke();
+        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
+        ctx.arc(this.curve1.controlStart.x, this.curve1.controlStart.y, radius, 0, 2 * Math.PI);
+        ctx.arc(this.curve2.controlStart.x, this.curve2.controlStart.y, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
 
-            ctx.arc(this.x + this.radius * this.prev.sin + this.radius * this.prev.cos, this.y - this.radius * this.prev.cos + this.radius * this.prev.sin, 5, 0, 2 * Math.PI);
-            ctx.stroke();
-        }
-        if (this.next) {
-            ctx.moveTo(this.x, this.y);
+        ctx.strokeStyle = "rgba(200, 100, 255, 1)";
+        ctx.arc(this.curve1.controlEnd.x, this.curve1.controlEnd.y, radius, 0, 2 * Math.PI);
+        ctx.arc(this.curve2.controlEnd.x, this.curve2.controlEnd.y, radius, 0, 2 * Math.PI);
+
+        ctx.stroke();   
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(125, 225, 250, 1)";
+        ctx.moveTo(this.x, this.y);
+        if (this.next) {   
             ctx.lineTo(this.next.x, this.next.y);
             ctx.stroke();
             this.next.devGraphics();
+        }
+        else{
+            ctx.lineTo(this.x + 20 * this.vec.getX(), this.y + 20 * this.vec.getY())
+            ctx.stroke();
         }
     }
 
