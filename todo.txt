@@ -1,6 +1,5 @@
 TODO:
     particle shit
-    movement bias
     splitting wisps
     menu
 

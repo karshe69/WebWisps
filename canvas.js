@@ -4,7 +4,7 @@ var ctx = c.getContext("2d");
 
 var jumpCorrect = true;
 var devgraph = false;
-var fill = false;
+var fill = true;
 
 $("#devGraphicsCheck").change(function () {
     if ($("#devGraphicsCheck").is(":checked")) {
@@ -174,8 +174,6 @@ class Vertebra {
 
     endcontrol() {
         let dist = Math.sqrt((this.curve1.end.x - this.next.curve1.controlStart.x) ** 2 + (this.curve1.end.y - this.next.curve1.controlStart.y) ** 2)
-        console.log(this.curve1.end, this.next.curve1.controlStart, dist);
-        console.log(this.curve1.end.x, this.curve1.end.x + this.radius / 10 * (this.next.curve1.controlStart.x - this.curve1.end.x) / dist);
         this.curve1.controlEnd.x = this.curve1.end.x + this.radius / 2 * (this.curve1.end.x - this.next.curve1.controlStart.x) / dist;
         this.curve1.controlEnd.y = this.curve1.end.y + this.radius / 2 * (this.curve1.end.y - this.next.curve1.controlStart.y) / dist;
         dist = Math.sqrt((this.curve2.end.x - this.next.curve2.controlStart.x) ** 2 + (this.curve2.end.y - this.next.curve2.controlStart.y) ** 2)
@@ -304,8 +302,9 @@ class Wisp {
             ctx.strokeStyle = grd;
             ctx.stroke();
         }
-        if (devgraph)
+        if (devgraph) {
             this.vertebrae[this.vertebrae.length - 1].devGraphics();
+        }
     }
 
     move() {
@@ -323,12 +322,68 @@ class Wisp {
     changeHeadDirection() {
         this.time += getRnd(0, 0.01);
         let change = this.directionFunction(this.time)
-        this.vertebrae[0].vec.addAngle(change);
+        let biasMag = this.biasMagnitude();
+        let biasDir = this.biasDirection()
+        this.vertebrae[0].vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * this.MAX_ANGLE);
 
     }
 
+    biasMagnitude() {
+        let x = (this.vertebrae[0].x - ctx.canvas.width / 2) / ctx.canvas.width * 2
+        let y = (this.vertebrae[0].y - ctx.canvas.height / 2) / ctx.canvas.height * 2
+        let distSqrd = Math.pow(x, 2) + Math.pow(y, 2)
+        if (distSqrd < Math.pow(0.6, 2))
+            return 0;
+        distSqrd -= Math.pow(0.6, 2)
+        distSqrd /= Math.pow(0.9, 2) - Math.pow(0.6, 2)
+        if (distSqrd > 1)
+            return 1;
+        return distSqrd;
+    }
+
+    biasDirection() {
+        let curDir = this.vertebrae[0].vec.angle;
+        let x = this.vertebrae[0].x / ctx.canvas.width;
+        let y = this.vertebrae[0].y / ctx.canvas.height
+        if (x == 0.5)
+            x += 0.01
+        let rate = (y - 0.5) / (x - 0.5)
+        let range = Math.PI * 5 / 8;
+        switch (true) {
+            case (-2.41421356237 > rate):
+                curDir -= Math.PI / 2;
+                break;
+            case (-0.414213562373 > rate):
+                range += Math.PI / 4;
+                curDir -= 3 * Math.PI / 4;
+                break;
+            case (0 > rate):
+                curDir -= Math.PI;
+                break;
+            case (0.41421356237 > rate):
+                break;
+            case (2.41421356237 > rate):
+                range += Math.PI / 4;
+                curDir -= Math.PI / 4;
+                break;
+            default:
+                curDir -= Math.PI / 2;
+        }
+        if (y - 0.5 < 0)
+            curDir += Math.PI;
+        if (curDir >= Math.PI)
+            curDir -= 2 * Math.PI;
+        if (curDir <= -Math.PI)
+            curDir += 2 * Math.PI;
+        if (curDir >= Math.PI || curDir <= -Math.PI)
+            console.log("weird");
+            if(curDir > range || curDir < -range)
+            return(0);
+        return((Math.sign(curDir) == 0) ? 1 : Number(Math.sign(curDir)));
+    }
+
     directionFunction(x) {
-        return this.MAX_ANGLE / 4 * (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866)));
+        return (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866))) / 4;
     }
 
     moveWispByDots(dx, dy, vert, ctx) {
@@ -416,8 +471,37 @@ setInterval(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         wisp.move();
         wisp.draw();
+        if (devgraph) {
+            devGraphics();
+        }
     }
 }, 10);
+
+function devGraphics() {
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(255, 155, 155, 1)";
+    ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.3, ctx.canvas.height * 0.3, 0, 0, 2 * Math.PI)
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(155, 255, 155, 1)";
+    ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.45, ctx.canvas.height * 0.45, 0, 0, 2 * Math.PI)
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(155, 155, 155, 1)";
+    ctx.moveTo(ctx.canvas.width, (Math.tan(Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+    ctx.lineTo(0, (Math.tan(-Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+
+    ctx.moveTo(0, (Math.tan(Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+    ctx.lineTo(ctx.canvas.width, (Math.tan(-Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+
+    ctx.moveTo((Math.tan(Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
+    ctx.lineTo((Math.tan(-Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, 0);
+
+    ctx.moveTo((Math.tan(-Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
+    ctx.lineTo((Math.tan(Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, 0);
+    ctx.stroke()
+}
 
 function getRndInt(min, max) {
     return Math.floor(getRnd(min, max));
@@ -428,8 +512,9 @@ function getRnd(min, max) {
 }
 
 function main() {
-    wisp = new Wisp(20, 400, 400, 31, 3);
+    wisp = new Wisp(20, 400, 400, 25, 2);
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
 }
+
 main()
