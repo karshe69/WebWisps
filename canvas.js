@@ -332,10 +332,10 @@ class Wisp {
         let x = (this.vertebrae[0].x - ctx.canvas.width / 2) / ctx.canvas.width * 2
         let y = (this.vertebrae[0].y - ctx.canvas.height / 2) / ctx.canvas.height * 2
         let distSqrd = Math.pow(x, 2) + Math.pow(y, 2)
-        if (distSqrd < Math.pow(0.6, 2))
+        if (distSqrd < Math.pow(0.7, 2))
             return 0;
-        distSqrd -= Math.pow(0.6, 2)
-        distSqrd /= Math.pow(0.9, 2) - Math.pow(0.6, 2)
+        distSqrd -= Math.pow(0.7, 2)
+        distSqrd /= Math.pow(0.9, 2) - Math.pow(0.7, 2)
         if (distSqrd > 1)
             return 1;
         return distSqrd;
@@ -348,7 +348,7 @@ class Wisp {
         if (x == 0.5)
             x += 0.01
         let rate = (y - 0.5) / (x - 0.5)
-        let range = Math.PI * 5 / 8;
+        let range = Math.PI * 6 / 8;
         switch (true) {
             case (-2.41421356237 > rate):
                 curDir -= Math.PI / 2;
@@ -480,7 +480,7 @@ setInterval(() => {
 function devGraphics() {
     ctx.beginPath();
     ctx.strokeStyle = "rgba(255, 155, 155, 1)";
-    ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.3, ctx.canvas.height * 0.3, 0, 0, 2 * Math.PI)
+    ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.35, ctx.canvas.height * 0.35, 0, 0, 2 * Math.PI)
     ctx.stroke();
     ctx.beginPath();
     ctx.strokeStyle = "rgba(155, 255, 155, 1)";
