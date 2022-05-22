@@ -512,7 +512,7 @@ function getRnd(min, max) {
 }
 
 function main() {
-    wisp = new Wisp(20, 400, 400, 25, 2);
+    wisp = new Wisp(20, 400, 400, 7, 0.6);
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
 }
