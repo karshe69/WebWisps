@@ -1,4 +1,6 @@
 const MOVE_FROM_EDGE_TIME = 500;
+const MAX_ANGLE = 0.016;
+
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 
@@ -46,6 +48,10 @@ class RadianVector {
             this.angle -= 2 * Math.PI
         if (this.angle < -3.142)
             this.angle += 2 * Math.PI
+    }
+
+    copy() {
+        return new RadianVector(this.angle, this.magnitude)
     }
 }
 
@@ -109,6 +115,10 @@ class Vertebra {
 
     static createVert(x, y, radius, next) {
         return new Vertebra(x, y, radius, new RadianVector(0, next.vec.magnitude), next);
+    }
+
+    copy(next) {
+        return new Vertebra(this.x, this.y, this.radius, this.vec.copy(), next)
     }
 
     draw() {
@@ -255,32 +265,49 @@ class Vertebra {
 }
 
 class Wisp {
-    constructor(n, x, y, radius, speed, phaseShift) {
-        this.phaseShift = phaseShift
+    constructor() {
         this.time = 0;
-        this.MAX_ANGLE = 0.016;
-        this.radius = radius
         this.vertebrae = [];
-        let r = 0
-        let vert = null
-        for (let i = 0; i < n; i++) {
-            r = this.radius * this.rate(n, i)
-            if (i == 0) {
-                this.vertebrae.push(new Vertebra(Math.floor(x), y, r, new RadianVector(0, speed), vert))
-            }
-
-            else
-                this.vertebrae.push(Vertebra.createVert(Math.floor(x), y, r, vert))
-            x -= 2.5 * r
-            if (vert)
-                vert.prev = this.vertebrae[i]
-            vert = this.vertebrae[i]
-        }
-
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
         this.movingFromEdge = false;
+    }
+
+    static create(n, x, y, radius, speed, phaseShift) {
+        let wisp = new Wisp()
+        wisp.phaseShift = phaseShift
+        wisp.radius = radius
+        let r = 0
+        let vert = null
+        for (let i = 0; i < n; i++) {
+            r = wisp.radius * wisp.rate(n, i)
+            if (i == 0) {
+                wisp.vertebrae.push(new Vertebra(Math.floor(x), y, r, new RadianVector(0, speed), vert))
+            }
+
+            else
+                wisp.vertebrae.push(Vertebra.createVert(Math.floor(x), y, r, vert))
+            x -= 2.5 * r
+            if (vert)
+                vert.prev = wisp.vertebrae[i]
+            vert = wisp.vertebrae[i]
+        }
+        return wisp;
+    }
+
+    split() {
+        let wisp = new Wisp()
+        wisp.phaseShift = getRnd(0, 6.28);
+        wisp.radius = this.radius
+        let vert = null
+        for (let i = 0; i < this.vertebrae.length; i++) {
+            wisp.vertebrae.push(this.vertebrae[i].copy(vert));
+            if (vert)   
+                vert.prev = wisp.vertebrae[i]
+            vert = wisp.vertebrae[i]
+        }
+        return wisp;
     }
 
     // rate between radius of vertebras
@@ -325,7 +352,7 @@ class Wisp {
         let change = this.directionFunction(this.time + this.phaseShift)
         let biasMag = this.biasMagnitude();
         let biasDir = this.biasDirection()
-        this.vertebrae[0].vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * this.MAX_ANGLE);
+        this.vertebrae[0].vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * MAX_ANGLE);
 
     }
 
@@ -378,9 +405,9 @@ class Wisp {
             curDir += 2 * Math.PI;
         if (curDir >= Math.PI || curDir <= -Math.PI)
             console.log("weird");
-            if(curDir > range || curDir < -range)
-            return(0);
-        return((Math.sign(curDir) == 0) ? 1 : Number(Math.sign(curDir)));
+        if (curDir > range || curDir < -range)
+            return (0);
+        return ((Math.sign(curDir) == 0) ? 1 : Number(Math.sign(curDir)));
     }
 
     directionFunction(x) {
@@ -472,17 +499,19 @@ function devGraphics() {
 
     ctx.beginPath();
     ctx.strokeStyle = "rgba(155, 155, 155, 1)";
-    ctx.moveTo(ctx.canvas.width, (Math.tan(Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
-    ctx.lineTo(0, (Math.tan(-Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+    let tanPI = Math.tan(Math.PI / 8)
+    let tanMPI = Math.tan(-Math.PI / 8)
+    ctx.moveTo(ctx.canvas.width, (tanPI * ctx.canvas.height + ctx.canvas.height) / 2);
+    ctx.lineTo(0, (tanMPI * ctx.canvas.height + ctx.canvas.height) / 2);
 
-    ctx.moveTo(0, (Math.tan(Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
-    ctx.lineTo(ctx.canvas.width, (Math.tan(-Math.PI / 8) * ctx.canvas.height + ctx.canvas.height) / 2);
+    ctx.moveTo(0, (tanPI * ctx.canvas.height + ctx.canvas.height) / 2);
+    ctx.lineTo(ctx.canvas.width, (tanMPI * ctx.canvas.height + ctx.canvas.height) / 2);
 
-    ctx.moveTo((Math.tan(Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
-    ctx.lineTo((Math.tan(-Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, 0);
+    ctx.moveTo((tanPI * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
+    ctx.lineTo((tanMPI * ctx.canvas.width + ctx.canvas.width) / 2, 0);
 
-    ctx.moveTo((Math.tan(-Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
-    ctx.lineTo((Math.tan(Math.PI / 8) * ctx.canvas.width + ctx.canvas.width) / 2, 0);
+    ctx.moveTo((tanMPI * ctx.canvas.width + ctx.canvas.width) / 2, ctx.canvas.height)
+    ctx.lineTo((tanPI * ctx.canvas.width + ctx.canvas.width) / 2, 0);
     ctx.stroke()
 }
 
@@ -508,7 +537,7 @@ setInterval(() => {
     }
 }, 10);
 
-function iterate(wisp, index){
+function iterate(wisp, index) {
     if (!wisp.movingFromEdge) {
         wisp.move();
         wisp.draw();
@@ -519,8 +548,8 @@ function main() {
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
     wisps = [];
-    wisps.push(new Wisp(20, ctx.canvas.width/2, ctx.canvas.height/2, 7, 0.6, getRnd(0, 6.28)));
-    wisps.push(new Wisp(20, ctx.canvas.width/2, ctx.canvas.height/2, 7, 0.6, getRnd(0, 6.28)));
+    wisps.push(Wisp.create(20, ctx.canvas.width / 2, ctx.canvas.height / 2, 7, 0.6, getRnd(0, 6.28)));
+    wisps.push(wisps[0].split())
 }
 
 main()
