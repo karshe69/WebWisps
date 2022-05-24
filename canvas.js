@@ -2,7 +2,7 @@ const MOVE_FROM_EDGE_TIME = 500;
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
 
-var jumpCorrect = true;
+var jumpCorrect = false;
 var devgraph = false;
 var fill = true;
 
@@ -255,7 +255,8 @@ class Vertebra {
 }
 
 class Wisp {
-    constructor(n, x, y, radius, speed) {
+    constructor(n, x, y, radius, speed, phaseShift) {
+        this.phaseShift = phaseShift
         this.time = 0;
         this.MAX_ANGLE = 0.016;
         this.radius = radius
@@ -311,7 +312,7 @@ class Wisp {
         this.changeDirection();
         this.vertebrae[0].move();
         if (jumpCorrect)
-            wisp.moveIfNearEdge();
+            this.moveIfNearEdge();
     }
 
     changeDirection() {
@@ -321,7 +322,7 @@ class Wisp {
 
     changeHeadDirection() {
         this.time += getRnd(0, 0.01);
-        let change = this.directionFunction(this.time)
+        let change = this.directionFunction(this.time + this.phaseShift)
         let biasMag = this.biasMagnitude();
         let biasDir = this.biasDirection()
         this.vertebrae[0].vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * this.MAX_ANGLE);
@@ -459,24 +460,6 @@ class Particle {
     }
 }
 
-
-$(window).on('resize', function () {
-    var win = $(this); //this = window
-    ctx.canvas.width = window.innerWidth;
-    ctx.canvas.height = window.innerHeight;
-});
-
-setInterval(() => {
-    if (!wisp.movingFromEdge) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        wisp.move();
-        wisp.draw();
-        if (devgraph) {
-            devGraphics();
-        }
-    }
-}, 10);
-
 function devGraphics() {
     ctx.beginPath();
     ctx.strokeStyle = "rgba(255, 155, 155, 1)";
@@ -511,10 +494,33 @@ function getRnd(min, max) {
     return (Math.random() * (max - min)) + min;
 }
 
-function main() {
-    wisp = new Wisp(20, 400, 400, 7, 0.6);
+$(window).on('resize', function () {
+    var win = $(this); //this = window
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
+});
+
+setInterval(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    wisps.forEach(iterate);
+    if (devgraph) {
+        devGraphics();
+    }
+}, 10);
+
+function iterate(wisp, index){
+    if (!wisp.movingFromEdge) {
+        wisp.move();
+        wisp.draw();
+    }
+}
+
+function main() {
+    ctx.canvas.width = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
+    wisps = [];
+    wisps.push(new Wisp(20, ctx.canvas.width/2, ctx.canvas.height/2, 7, 0.6, getRnd(0, 6.28)));
+    wisps.push(new Wisp(20, ctx.canvas.width/2, ctx.canvas.height/2, 7, 0.6, getRnd(0, 6.28)));
 }
 
 main()
