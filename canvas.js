@@ -1,5 +1,13 @@
+const TICK_RATE = 10; //ms
+
 const MOVE_FROM_EDGE_TIME = 500;
 const MAX_ANGLE = 0.016;
+
+const DISAPPEAR_RATE = 0.005;
+const LIFELINE = 800 * DISAPPEAR_RATE + 1; // the first number = ticks until a wisp may disapear.
+const SPLIT_CHANCE  = 30;
+const DISAPPEAR_CHANCE = 300;
+
 
 var c = document.getElementById("canvas");
 var ctx = c.getContext("2d");
@@ -25,6 +33,10 @@ class Vector {
     constructor(x, y) {
         this.x = x;
         this.y = y;
+    }
+
+    copy() {
+        return new Vector(this.x, this.y)
     }
 }
 
@@ -65,6 +77,10 @@ class BezierCurve {
 
     static createBezier(xs, ys, xe, ye, xcs, ycs, xce, yce) {
         return new BezierCurve(new Vector(xs, ys), new Vector(xe, ye), new Vector(xcs, ycs), new Vector(xce, yce));
+    }
+
+    copy() {
+        return new BezierCurve(this.start.copy(), this.end.copy(), this.controlStart.copy(), this.controlEnd.copy())
     }
 
     setStart = (x, y) => {
@@ -114,11 +130,15 @@ class Vertebra {
     }
 
     static createVert(x, y, radius, next) {
-        return new Vertebra(x, y, radius, new RadianVector(0, next.vec.magnitude), next);
+        let vertebra = new Vertebra(x, y, radius, new RadianVector(0, next.vec.magnitude), next);
+        return vertebra
     }
 
     copy(next) {
-        return new Vertebra(this.x, this.y, this.radius, this.vec.copy(), next)
+        let vertebra = new Vertebra(this.x, this.y, this.radius, this.vec.copy(), next)
+        vertebra.curve1 = this.curve1.copy()
+        vertebra.curve2 = this.curve2.copy()
+        return vertebra;
     }
 
     draw() {
@@ -266,6 +286,7 @@ class Vertebra {
 
 class Wisp {
     constructor() {
+        this.lifeLine = LIFELINE;
         this.time = 0;
         this.vertebrae = [];
         //variable for move edge function, used for clearing setInterval after a certain period of time
@@ -303,7 +324,7 @@ class Wisp {
         let vert = null
         for (let i = 0; i < this.vertebrae.length; i++) {
             wisp.vertebrae.push(this.vertebrae[i].copy(vert));
-            if (vert)   
+            if (vert)
                 vert.prev = wisp.vertebrae[i]
             vert = wisp.vertebrae[i]
         }
@@ -318,8 +339,12 @@ class Wisp {
     draw() {
         // Create gradient
         var grd = ctx.createLinearGradient(this.vertebrae[this.vertebrae.length - 1].x, this.vertebrae[this.vertebrae.length - 1].y, this.vertebrae[0].x, this.vertebrae[0].y);
-        grd.addColorStop(0, "rgba(100, 0, 255, 0)");
-        grd.addColorStop(1, "rgba(100, 0, 255, 1)");
+        let color = "rgba(100, 0, 255, "
+        grd.addColorStop(0, color + "0)");
+        if (this.lifeLine > 1)
+            grd.addColorStop(1, color + "1)");
+        else
+            grd.addColorStop(1, color + this.lifeLine + ")");
         ctx.beginPath();
         this.vertebrae[this.vertebrae.length - 1].draw();
         if (fill) {
@@ -524,7 +549,7 @@ function getRnd(min, max) {
 }
 
 $(window).on('resize', function () {
-    var win = $(this); //this = window
+    var win = $(this); //this = windowwisp, index
     ctx.canvas.width = window.innerWidth;
     ctx.canvas.height = window.innerHeight;
 });
@@ -535,11 +560,31 @@ setInterval(() => {
     if (devgraph) {
         devGraphics();
     }
-}, 10);
+}, TICK_RATE);
 
 function iterate(wisp, index) {
     if (!wisp.movingFromEdge) {
+        if (wisp.lifeLine == 0) {
+            wisps.splice(index, 1);
+            return;
+        }
         wisp.move();
+        if (wisp.lifeLine != 1) {
+            wisp.lifeLine -= DISAPPEAR_RATE
+            wisp.lifeLine = Math.round(wisp.lifeLine * 1000) / 1000
+        }
+        else {
+            if (getRndInt(0, DISAPPEAR_CHANCE) == 0 && activeWisps > 1) {
+                activeWisps -= 1
+                wisp.lifeLine -= DISAPPEAR_RATE
+            }
+            else if (getRndInt(0, SPLIT_CHANCE * activeWisps) == 0) {
+                activeWisps += 1
+                wisps.push(wisp.split())
+                wisp.lifeLine = LIFELINE
+            }
+        }
+
         wisp.draw();
     }
 }
@@ -549,7 +594,7 @@ function main() {
     ctx.canvas.height = window.innerHeight;
     wisps = [];
     wisps.push(Wisp.create(20, ctx.canvas.width / 2, ctx.canvas.height / 2, 7, 0.6, getRnd(0, 6.28)));
-    wisps.push(wisps[0].split())
+    activeWisps = 1
 }
 
 main()
