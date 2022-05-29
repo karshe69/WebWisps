@@ -1,11 +1,13 @@
 const TICK_RATE = 10; //ms
 
+const PARTICLE_RADIUS = 5;
+
 const MOVE_FROM_EDGE_TIME = 500;
 const MAX_ANGLE = 0.016;
 
 const DISAPPEAR_RATE = 0.005;
 const LIFELINE = 800 * DISAPPEAR_RATE + 1; // the first number = ticks until a wisp may disapear.
-const SPLIT_CHANCE  = 30;
+const SPLIT_CHANCE = 30;
 const DISAPPEAR_CHANCE = 300;
 
 
@@ -293,6 +295,8 @@ class Wisp {
         this.moveEdgeTimer = 0;
 
         this.movingFromEdge = false;
+
+        this.particles = [];
     }
 
     static create(n, x, y, radius, speed, phaseShift) {
@@ -358,9 +362,20 @@ class Wisp {
         if (devgraph) {
             this.vertebrae[this.vertebrae.length - 1].devGraphics();
         }
+
+        while(this.particles[0].life <= 0)
+        {
+            this.particles.splice(0,1);
+        }
+        this.particles.forEach(part => {
+            part.update();
+            part.draw();
+        });
     }
 
     move() {
+        var pt = new Particle(this.vertebrae[0].x, this.vertebrae[0].y, PARTICLE_RADIUS, 3000, this.vertebrae[0].vec.copy());
+        this.particles.push(pt)
         this.changeDirection();
         this.vertebrae[0].move();
         if (jumpCorrect)
@@ -490,25 +505,33 @@ class Wisp {
 }
 
 class Particle {
-    constructor(x, y, radius, lifeSpan, dirVec) {
+    constructor(x, y, radius, lifeSpan, dirVec, color) {
         this.x = x;
         this.y = y;
         this.radius = radius;
+        this.viewRadius = radius;
         this.lifeSpan = lifeSpan;
         this.life = this.lifeSpan;
-        this.dirVec = new Vector(dirVec.x * getRndInt(0, 4) - 2, dirVec.y * getRndInt(0, 4) - 2);
+        this.dirVec = dirVec;
+        this.dirVec.magnitude *= -0.1;
     }
 
-    update() {
-        this.x += this.dirVec.x;
-        this.y += this.dirVec.y;
-        this.radius *= this.life / this.lifeSpan
+    static createParticle(x, y, lifeSpan, dirVec, color) {
+        return new Particle(x, y, PARTICLE_RADIUS, lifeSpan, dirVec, color);
+    }
+
+    update() { 
+        this.x += this.dirVec.getX();
+        this.y += this.dirVec.getY();
+        this.viewRadius = this.radius * this.life / this.lifeSpan;
         this.life -= 10;
     }
 
     draw() {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = `rgba(125, 225, ${255 * this.life / this.lifeSpan}, ${this.life / this.lifeSpan})`;
+        ctx.arc(this.x, this.y, this.viewRadius, 0, Math.PI * 2, false);
+        ctx.fill();
     }
 }
 
@@ -584,7 +607,6 @@ function iterate(wisp, index) {
                 wisp.lifeLine = LIFELINE
             }
         }
-
         wisp.draw();
     }
 }
