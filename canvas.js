@@ -78,6 +78,19 @@ class RadianVector {
     }
 }
 
+class Color{
+    constructor(red, green, blue, alpha){
+        this.red = red;
+        this.green = green;
+        this.blue = blue;
+        this.alpha = alpha;
+    }
+
+    toString(){
+        return "rgba(" + this.red + ", " + this.green + ", " + this.blue + ", " + this.alpha + ")"
+    }
+}
+
 /*********************************************
  *  VERTEBRAE
  ********************************************* */
@@ -109,12 +122,12 @@ class Vertebra {
     devGraphics() {
         let radius = this.radius / 7;
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255, 0, 0, 1)";
+        ctx.strokeStyle = new Color(255, 0, 0, 1).toString();
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.beginPath();
 
-        ctx.strokeStyle = "rgba(125, 225, 250, 1)";
+        ctx.strokeStyle = new Color(125, 255, 250, 1).toString();
         ctx.moveTo(this.x, this.y);
         if (this.next) {
             ctx.lineTo(this.next.x, this.next.y);
@@ -378,6 +391,7 @@ class Particle {
         this.life = this.lifeSpan;
         this.dirVec = dirVec;
         this.dirVec.magnitude *= -0.1;
+        this.color = color;
     }
 
     static createParticle(x, y, lifeSpan, dirVec, color) {
@@ -405,16 +419,16 @@ class Particle {
 
 function devGraphics() {
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(255, 155, 155, 1)";
+    ctx.strokeStyle = Color(255, 155, 155, 1).toString();
     ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.35, ctx.canvas.height * 0.35, 0, 0, 2 * Math.PI)
     ctx.stroke();
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(155, 255, 155, 1)";
+    ctx.strokeStyle = Color(155, 255, 155, 1).toString();
     ctx.ellipse(ctx.canvas.width / 2, ctx.canvas.height / 2, ctx.canvas.width * 0.45, ctx.canvas.height * 0.45, 0, 0, 2 * Math.PI)
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(155, 155, 155, 1)";
+    ctx.strokeStyle = Color(155, 155, 155, 1).toString();
     let tanPI = Math.tan(Math.PI / 8)
     let tanMPI = Math.tan(-Math.PI / 8)
     ctx.moveTo(ctx.canvas.width, (tanPI * ctx.canvas.height + ctx.canvas.height) / 2);
