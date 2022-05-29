@@ -78,61 +78,13 @@ class RadianVector {
     }
 }
 
-class BezierCurve {
-    constructor(start, end, controlStart, controlEnd) {
-        this.start = start;
-        this.end = end;
-        this.controlStart = controlStart;
-        this.controlEnd = controlEnd;
-    }
-
-    static createBezier(xs, ys, xe, ye, xcs, ycs, xce, yce) {
-        return new BezierCurve(new Vector(xs, ys), new Vector(xe, ye), new Vector(xcs, ycs), new Vector(xce, yce));
-    }
-
-    copy() {
-        return new BezierCurve(this.start.copy(), this.end.copy(), this.controlStart.copy(), this.controlEnd.copy())
-    }
-
-    setStart = (x, y) => {
-        this.start.x = x;
-        this.start.y = y;
-    }
-
-    setEnd = (x, y) => {
-        this.end.x = x;
-        this.end.y = y;
-    }
-
-    setControlStart = (x, y) => {
-        this.controlStart.x = x;
-        this.controlStart.y = y;
-    }
-
-    setControlEnd = (x, y) => {
-        this.controlEnd.x = x;
-        this.controlEnd.y = y;
-    }
-
-    draw() {
-        ctx.moveTo(this.start.x, this.start.y);
-        ctx.bezierCurveTo(this.controlStart.x, this.controlStart.y, this.controlEnd.x, this.controlEnd.y, this.end.x, this.end.y);
-    }
-    drawBack() {
-        ctx.moveTo(this.end.x, this.end.y);
-        ctx.bezierCurveTo(this.controlEnd.x, this.controlEnd.y, this.controlStart.x, this.controlStart.y, this.start.x, this.start.y);
-    }
-}
-
 /*********************************************
  *  VERTEBRAE
  ********************************************* */
 
 class Vertebra {
     prev = null;
-    curve1 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
-    curve2 = BezierCurve.createBezier(0, 0, 0, 0, 0, 0, 0, 0);
-
+    
     constructor(x, y, radius, vec, next) {
         this.x = x;
         this.y = y;
@@ -151,79 +103,7 @@ class Vertebra {
 
     copy(next) {
         let vertebra = new Vertebra(this.x, this.y, this.radius, this.vec.copy(), next)
-        vertebra.curve1 = this.curve1.copy()
-        vertebra.curve2 = this.curve2.copy()
         return vertebra;
-    }
-
-    draw() {
-        var sinR = this.radius * this.sin;
-        var cosR = this.radius * this.cos;
-        if (this.next) {
-            var sinNextR = this.next.radius * this.sin;
-            var cosNextR = this.next.radius * this.cos;
-        }
-
-        if (this.prev == null) {
-            this.curve1.setStart(this.x - 2 * cosR, this.y - 2 * sinR);
-            this.curve2.setStart(this.curve1.start.x, this.curve1.start.y);
-
-            this.curve1.setControlStart(this.x - sinR, this.y + cosR);
-            this.curve2.setControlStart(this.x + sinR, this.y - cosR);
-
-            this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
-            this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
-
-            this.curve1.setControlEnd(this.next.x - sinNextR, this.next.y + cosNextR);
-            this.curve2.setControlEnd(this.next.x + sinNextR, this.next.y - cosNextR);
-
-        }
-        else {
-            this.curve1.start = this.prev.curve1.end;
-            this.curve2.start = this.prev.curve2.end;
-            var prevSinR = this.radius * this.prev.sin;
-            var prevCosR = this.radius * this.prev.cos;
-
-
-
-            if (this.next == null) {
-                this.curve1.setControlStart(this.x - prevSinR + prevCosR, this.y + prevCosR + prevSinR);
-                this.curve2.setControlStart(this.x + prevSinR + prevCosR, this.y - prevCosR + prevSinR);
-
-                this.curve1.setEnd(this.x + prevCosR, this.y + prevSinR);
-                this.curve2.end = this.curve1.end;
-
-                this.curve1.controlEnd = this.curve1.end;
-                this.curve2.controlEnd = this.curve2.end;
-            }
-            else {
-                this.curve1.setControlStart(this.sin ** 2 * (this.curve1.start.x + this.curve1.end.x) / 2 + this.cos ** 2 * (this.curve1.start.x * this.radius + this.curve1.end.x * this.next.radius) / (this.radius + this.next.radius),
-                    this.cos ** 2 * (this.curve1.start.y + this.curve1.end.y) / 2 + this.sin ** 2 * (this.curve1.start.y * this.radius + this.curve1.end.y * this.next.radius) / (this.radius + this.next.radius));
-                this.curve2.setControlStart(this.sin ** 2 * (this.curve2.start.x + this.curve2.end.x) / 2 + this.cos ** 2 * (this.curve2.start.x * this.radius + this.curve2.end.x * this.next.radius) / (this.radius + this.next.radius),
-                    this.cos ** 2 * (this.curve2.start.y + this.curve2.end.y) / 2 + this.sin ** 2 * (this.curve2.start.y * this.radius + this.curve2.end.y * this.next.radius) / (this.radius + this.next.radius));
-                this.curve1.setEnd(this.next.x - sinNextR, this.next.y + cosNextR);
-                this.curve2.setEnd(this.next.x + sinNextR, this.next.y - cosNextR);
-            }
-            this.prev.endcontrol()
-        }
-
-        if (this.next) {
-            this.next.draw();
-        }
-
-        this.curve1.draw()
-        ctx.lineTo(this.curve2.end.x, this.curve2.end.y);
-        this.curve2.drawBack();
-        ctx.lineTo(this.curve1.start.x, this.curve1.start.y);
-    }
-
-    endcontrol() {
-        let dist = Math.sqrt((this.curve1.end.x - this.next.curve1.controlStart.x) ** 2 + (this.curve1.end.y - this.next.curve1.controlStart.y) ** 2)
-        this.curve1.controlEnd.x = this.curve1.end.x + this.radius / 2 * (this.curve1.end.x - this.next.curve1.controlStart.x) / dist;
-        this.curve1.controlEnd.y = this.curve1.end.y + this.radius / 2 * (this.curve1.end.y - this.next.curve1.controlStart.y) / dist;
-        dist = Math.sqrt((this.curve2.end.x - this.next.curve2.controlStart.x) ** 2 + (this.curve2.end.y - this.next.curve2.controlStart.y) ** 2)
-        this.curve2.controlEnd.x = this.curve2.end.x + this.radius / 2 * (this.curve2.end.x - this.next.curve2.controlStart.x) / dist;
-        this.curve2.controlEnd.y = this.curve2.end.y + this.radius / 2 * (this.curve2.end.y - this.next.curve2.controlStart.y) / dist;
     }
 
     devGraphics() {
@@ -231,24 +111,6 @@ class Vertebra {
         ctx.beginPath();
         ctx.strokeStyle = "rgba(255, 0, 0, 1)";
         ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-
-        ctx.strokeStyle = "rgba(0, 255, 0, 1)";
-        ctx.arc(this.curve1.controlStart.x, this.curve1.controlStart.y, radius, 0, 2 * Math.PI);
-        ctx.arc(this.curve2.controlStart.x, this.curve2.controlStart.y, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-
-        ctx.strokeStyle = "rgba(200, 100, 255, 1)";
-        ctx.arc(this.curve1.controlEnd.x, this.curve1.controlEnd.y, radius, 0, 2 * Math.PI);
-        ctx.arc(this.curve2.controlEnd.x, this.curve2.controlEnd.y, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-
-        ctx.strokeStyle = "rgba(255, 255, 255, 1)";
-        ctx.arc(this.curve1.end.x, this.curve1.end.y, radius, 0, 2 * Math.PI);
-        ctx.arc(this.curve2.end.x, this.curve2.end.y, radius, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.beginPath();
 
@@ -359,23 +221,6 @@ class Wisp {
 
     draw() {
         // Create gradient
-        var grd = ctx.createLinearGradient(this.vertebrae[this.vertebrae.length - 1].x, this.vertebrae[this.vertebrae.length - 1].y, this.vertebrae[0].x, this.vertebrae[0].y);
-        let color = "rgba(100, 0, 255, "
-        grd.addColorStop(0, color + "0)");
-        if (this.lifeLine > 1)
-            grd.addColorStop(1, color + "1)");
-        else
-            grd.addColorStop(1, color + this.lifeLine + ")");
-        ctx.beginPath();
-        this.vertebrae[this.vertebrae.length - 1].draw();
-        if (fill) {
-            ctx.fillStyle = grd;
-            ctx.fill();
-        }
-        else {
-            ctx.strokeStyle = grd;
-            ctx.stroke();
-        }
         if (devgraph) {
             this.vertebrae[this.vertebrae.length - 1].devGraphics();
         }
@@ -520,11 +365,9 @@ class Wisp {
     }
 }
 
-/**
+/******************************************
  * Particle system
- * 
- * possible alternative to Vertabrae?
- */
+ *****************************************/
 class Particle {
     constructor(x, y, radius, lifeSpan, dirVec, color) {
         this.x = x;
