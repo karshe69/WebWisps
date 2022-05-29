@@ -1,3 +1,8 @@
+
+/*********************************************
+ *  CONSTANTS
+ ********************************************* */
+
 const TICK_RATE = 10; //ms
 
 const PARTICLE_RADIUS = 5;
@@ -18,6 +23,8 @@ var jumpCorrect = false;
 var devgraph = false;
 var fill = true;
 
+
+// connects to checkbox; enables or disables dev graphics
 $("#devGraphicsCheck").change(function () {
     if ($("#devGraphicsCheck").is(":checked")) {
         devgraph = true;
@@ -30,7 +37,9 @@ $("#devGraphicsCheck").change(function () {
 });
 
 
-
+/*********************************************
+ *  UTILITY CLASSES
+ ********************************************* */
 class Vector {
     constructor(x, y) {
         this.x = x;
@@ -114,6 +123,10 @@ class BezierCurve {
         ctx.bezierCurveTo(this.controlEnd.x, this.controlEnd.y, this.controlStart.x, this.controlStart.y, this.start.x, this.start.y);
     }
 }
+
+/*********************************************
+ *  VERTEBRAE
+ ********************************************* */
 
 class Vertebra {
     prev = null;
@@ -286,6 +299,10 @@ class Vertebra {
     }
 }
 
+/*********************************************
+ *  WISP
+ ********************************************* */
+
 class Wisp {
     constructor() {
         this.lifeLine = LIFELINE;
@@ -363,9 +380,8 @@ class Wisp {
             this.vertebrae[this.vertebrae.length - 1].devGraphics();
         }
 
-        while(this.particles[0].life <= 0)
-        {
-            this.particles.splice(0,1);
+        while (this.particles[0].life <= 0) {
+            this.particles.splice(0, 1);
         }
         this.particles.forEach(part => {
             part.update();
@@ -504,6 +520,11 @@ class Wisp {
     }
 }
 
+/**
+ * Particle system
+ * 
+ * possible alternative to Vertabrae?
+ */
 class Particle {
     constructor(x, y, radius, lifeSpan, dirVec, color) {
         this.x = x;
@@ -520,7 +541,7 @@ class Particle {
         return new Particle(x, y, PARTICLE_RADIUS, lifeSpan, dirVec, color);
     }
 
-    update() { 
+    update() {
         this.x += this.dirVec.getX();
         this.y += this.dirVec.getY();
         this.viewRadius = this.radius * this.life / this.lifeSpan;
@@ -534,6 +555,10 @@ class Particle {
         ctx.fill();
     }
 }
+
+/*********************************************
+ *  UTILITY FUNCTIONS
+ ********************************************* */
 
 function devGraphics() {
     ctx.beginPath();
