@@ -84,7 +84,7 @@ class RadianVector {
 
 class Vertebra {
     prev = null;
-    
+
     constructor(x, y, radius, vec, next) {
         this.x = x;
         this.y = y;
@@ -228,16 +228,47 @@ class Wisp {
         while (this.particles[0].life <= 0) {
             this.particles.splice(0, 1);
         }
-        this.particles.forEach(part => {
-            part.update();
-            part.draw();
-        });
+        if (!devgraph) {
+            this.particles.forEach(part => {
+                part.update();
+                part.draw();
+            });
+        }
+        else {
+            this.particles.forEach(part => {
+                part.update();
+            });
+            this.drawParticlesLikeVerte();
+        }
+    }
+
+    drawParticlesLikeVerte() {
+        if (this.particles.length > this.vertebrae.length) {
+            var particlesToVertRatio = Math.floor(this.particles.length / this.vertebrae.length);
+            console.log(`particles = ${this.particles.length} | vertebrae = ${this.vertebrae.length}`);
+            var count = 0;
+            while (true) {
+                console.log(`count = ${count} | part = ${this.particles.length} | count < part = ${count < this.particles.length}`);
+                this.particles[count].drawDev();
+                count += particlesToVertRatio;
+                if (count < this.particles.length) {
+                    drawLine(this.particles[count - particlesToVertRatio].x, this.particles[count - particlesToVertRatio].y, this.particles[count].x, this.particles[count].y)
+
+                }
+                else {
+                    break
+                }
+            }
+        }
     }
 
     move() {
-        var lifeTime = this.vertebrae.length * 90;
+        //13.75 is an artificial number to approximate a relation between radius and vertebrae count such that the particles appear in similar length to vertebrae
+        var lifeTime = this.vertebrae.length * 13.5 * this.vertebrae[0].radius;
+
         var pt = new Particle(this.vertebrae[0].x, this.vertebrae[0].y, this.vertebrae[0].radius, lifeTime, this.vertebrae[0].vec.copy());
         this.particles.push(pt)
+
         this.changeDirection();
         this.vertebrae[0].move();
         if (jumpCorrect)
@@ -398,6 +429,13 @@ class Particle {
         ctx.arc(this.x, this.y, this.viewRadius, 0, Math.PI * 2, false);
         ctx.fill();
     }
+
+    drawDev() {
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255, 255, 0, 1)";
+        ctx.arc(this.x, this.y, this.viewRadius, 0, Math.PI * 2, false);
+        ctx.stroke();
+    }
 }
 
 /*********************************************
@@ -478,6 +516,14 @@ function iterate(wisp, index) {
         }
         wisp.draw();
     }
+}
+
+function drawLine(startX, startY, endX, endY) {
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(125, 225, 250, 1)";
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
 }
 
 function main() {
