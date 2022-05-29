@@ -235,7 +235,8 @@ class Wisp {
     }
 
     move() {
-        var pt = new Particle(this.vertebrae[0].x, this.vertebrae[0].y, PARTICLE_RADIUS, 3000, this.vertebrae[0].vec.copy());
+        var lifeTime = this.vertebrae.length * 90;
+        var pt = new Particle(this.vertebrae[0].x, this.vertebrae[0].y, this.vertebrae[0].radius, lifeTime, this.vertebrae[0].vec.copy());
         this.particles.push(pt)
         this.changeDirection();
         this.vertebrae[0].move();
