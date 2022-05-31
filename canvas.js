@@ -79,89 +79,6 @@ class RadianVector {
 }
 
 /*********************************************
- *  VERTEBRAE
- ********************************************* */
-
-class Vertebra {
-    prev = null;
-
-    constructor(x, y, radius, vec, next) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.vec = vec;
-        this.next = next;
-        if (next) {
-            this.calcCosSin();
-        }
-    }
-
-    static createVert(x, y, radius, next) {
-        let vertebra = new Vertebra(x, y, radius, new RadianVector(0, next.vec.magnitude), next);
-        return vertebra
-    }
-
-    copy(next) {
-        let vertebra = new Vertebra(this.x, this.y, this.radius, this.vec.copy(), next)
-        return vertebra;
-    }
-
-    devGraphics() {
-        let radius = this.radius / 7;
-        ctx.beginPath();
-        ctx.strokeStyle = "rgba(255, 0, 0, 1)";
-        ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.beginPath();
-
-        ctx.strokeStyle = "rgba(125, 225, 250, 1)";
-        ctx.moveTo(this.x, this.y);
-        if (this.next) {
-            ctx.lineTo(this.next.x, this.next.y);
-            ctx.stroke();
-            this.next.devGraphics();
-        }
-        else {
-            ctx.lineTo(this.x + 20 * this.vec.getX(), this.y + 20 * this.vec.getY())
-            ctx.stroke();
-        }
-    }
-
-    //calculates the cos and sin of this vertabrae
-    calcCosSin() {
-        if (!this.next)
-            return;
-        let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
-        this.cos = (this.next.x - this.x) / dist;
-        this.sin = (this.next.y - this.y) / dist;
-    }
-
-    //moves the rest of the vertabrae in accordance to the head's movement
-    move() {
-        if (this.next) {
-            let dist = Math.sqrt(Math.pow(this.x - this.next.x, 2) + Math.pow(this.y - this.next.y, 2));
-
-            if (dist < this.radius * 2.5) {
-                return;
-            }
-        }
-        this.x += this.vec.getX();
-        this.y += this.vec.getY();
-        this.calcCosSin();
-        if (this.prev) {
-            this.prev.move();
-        }
-    }
-
-    changeDirection() {
-        if (this.next)
-            this.vec.angle = Math.atan2(this.next.y - this.y, this.next.x - this.x)
-        if (this.prev)
-            this.prev.changeDirection();
-    }
-}
-
-/*********************************************
  *  WISP
  ********************************************* */
 
@@ -169,7 +86,6 @@ class Wisp {
     constructor() {
         this.lifeLine = LIFELINE;
         this.time = 0;
-        this.vertebrae = [];
         //variable for move edge function, used for clearing setInterval after a certain period of time
         this.moveEdgeTimer = 0;
 
@@ -182,49 +98,26 @@ class Wisp {
         let wisp = new Wisp()
         wisp.phaseShift = phaseShift
         wisp.radius = radius
-        let r = 0
-        let vert = null
-        for (let i = 0; i < n; i++) {
-            r = wisp.radius * wisp.rate(n, i)
-            if (i == 0) {
-                wisp.vertebrae.push(new Vertebra(Math.floor(x), y, r, new RadianVector(0, speed), vert))
-            }
-
-            else
-                wisp.vertebrae.push(Vertebra.createVert(Math.floor(x), y, r, vert))
-            x -= 2.5 * r
-            if (vert)
-                vert.prev = wisp.vertebrae[i]
-            vert = wisp.vertebrae[i]
-        }
-        return wisp;
+        wisp.x = x;
+        wisp.y = y;
+        wisp.n = n;
+        wisp.vec = new RadianVector(0, speed)
+        return wisp
     }
 
     split() {
         let wisp = new Wisp()
         wisp.phaseShift = getRnd(0, 6.28);
         wisp.radius = this.radius
-        let vert = null
-        for (let i = 0; i < this.vertebrae.length; i++) {
-            wisp.vertebrae.push(this.vertebrae[i].copy(vert));
-            if (vert)
-                vert.prev = wisp.vertebrae[i]
-            vert = wisp.vertebrae[i]
-        }
-        return wisp;
-    }
-
-    // rate between radius of vertebras
-    rate(n, i) {
-        return 1 / (1 + 15 * (i / n) * (i / n))
+        wisp.x = this.x;
+        wisp.y = this.y;
+        wisp.n = this.n;
+        wisp.vec = this.vec.copy()
+        return wisp
     }
 
     draw() {
         // Create gradient
-        if (devgraph) {
-            this.vertebrae[this.vertebrae.length - 1].devGraphics();
-        }
-
         while (this.particles[0].life <= 0) {
             this.particles.splice(0, 1);
         }
@@ -243,9 +136,9 @@ class Wisp {
     }
 
     drawParticlesLikeVerte() {
-        if (this.particles.length > this.vertebrae.length) {
-            var particlesToVertRatio = Math.floor(this.particles.length / this.vertebrae.length);
-            console.log(`particles = ${this.particles.length} | vertebrae = ${this.vertebrae.length}`);
+        if (this.particles.length > this.n) {
+            var particlesToVertRatio = Math.floor(this.particles.length / this.n);
+            console.log(`particles = ${this.particles.length} | vertebrae = ${this.n}`);
             var count = 0;
             while (true) {
                 console.log(`count = ${count} | part = ${this.particles.length} | count < part = ${count < this.particles.length}`);
@@ -264,20 +157,22 @@ class Wisp {
 
     move() {
         //13.75 is an artificial number to approximate a relation between radius and vertebrae count such that the particles appear in similar length to vertebrae
-        var lifeTime = this.vertebrae.length * 13.5 * this.vertebrae[0].radius;
+        var lifeTime = this.n * 13.5 * this.radius;
 
-        var pt = new Particle(this.vertebrae[0].x, this.vertebrae[0].y, this.vertebrae[0].radius, lifeTime, this.vertebrae[0].vec.copy());
+        var pt = new Particle(this.x, this.y, this.radius, lifeTime, this.vec.copy());
         this.particles.push(pt)
 
         this.changeDirection();
-        this.vertebrae[0].move();
+        
+        this.x += this.vec.getX();
+        this.y += this.vec.getY();
+        
         if (jumpCorrect)
             this.moveIfNearEdge();
     }
 
     changeDirection() {
         this.changeHeadDirection();
-        this.vertebrae[0].changeDirection();
     }
 
     changeHeadDirection() {
@@ -285,13 +180,13 @@ class Wisp {
         let change = this.directionFunction(this.time + this.phaseShift)
         let biasMag = this.biasMagnitude();
         let biasDir = this.biasDirection()
-        this.vertebrae[0].vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * MAX_ANGLE);
+        this.vec.addAngle((biasDir * biasMag + change * (1 - biasMag)) * MAX_ANGLE);
 
     }
 
     biasMagnitude() {
-        let x = (this.vertebrae[0].x - ctx.canvas.width / 2) / ctx.canvas.width * 2
-        let y = (this.vertebrae[0].y - ctx.canvas.height / 2) / ctx.canvas.height * 2
+        let x = (this.x - ctx.canvas.width / 2) / ctx.canvas.width * 2
+        let y = (this.y - ctx.canvas.height / 2) / ctx.canvas.height * 2
         let distSqrd = Math.pow(x, 2) + Math.pow(y, 2)
         if (distSqrd < Math.pow(0.7, 2))
             return 0;
@@ -303,9 +198,9 @@ class Wisp {
     }
 
     biasDirection() {
-        let curDir = this.vertebrae[0].vec.angle;
-        let x = this.vertebrae[0].x / ctx.canvas.width;
-        let y = this.vertebrae[0].y / ctx.canvas.height
+        let curDir = this.vec.angle;
+        let x = this.x / ctx.canvas.width;
+        let y = this.y / ctx.canvas.height
         if (x == 0.5)
             x += 0.01
         let rate = (y - 0.5) / (x - 0.5)
@@ -347,9 +242,9 @@ class Wisp {
         return (Math.sin(x) + Math.sin(1.388 * (x + 0.57)) + Math.sin(0.897 * (x + 2.047)) + Math.sin(1.288 * (x + 4.856)) + Math.sin(1.727 * (x + 2.866))) / 4;
     }
 
-    moveWispByDots(dx, dy, vert, ctx) {
-        vert.x += dx;
-        vert.y += dy;
+    moveWispByDots(dx, dy, wisp, ctx) {
+        wisp.x += dx;
+        wisp.y += dy;
 
         if (vert.prev) {
             this.moveWispByDots(dx, dy, vert.prev, ctx);
@@ -364,19 +259,19 @@ class Wisp {
         let x = 0;
         let y = 0;
 
-        if (this.vertebrae[0].x >= ctx.canvas.width) {
+        if (this.x >= ctx.canvas.width) {
             dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
             x = -1;
         }
-        if (this.vertebrae[0].x <= 0) {
+        if (this.x <= 0) {
             dist = ctx.canvas.width / 1.5 / MOVE_FROM_EDGE_TIME * 10;
             x = 1;
         }
-        if (this.vertebrae[0].y >= ctx.canvas.height) {
+        if (this.y >= ctx.canvas.height) {
             dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
             y = -1;
         }
-        if (this.vertebrae[0].y <= 0) {
+        if (this.y <= 0) {
             dist = ctx.canvas.height / 1.5 / MOVE_FROM_EDGE_TIME * 10;
             y = 1;
         }
@@ -385,7 +280,7 @@ class Wisp {
             this.movingFromEdge = true;
             this.interval = setInterval(() => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                this.moveWispByDots(x * dist, y * dist, this.vertebrae[0], ctx)
+                this.moveWispByDots(x * dist, y * dist, this, ctx)
                 this.moveEdgeTimer += 10;
                 if (this.moveEdgeTimer == MOVE_FROM_EDGE_TIME) {
                     this.moveEdgeTimer = 0;
