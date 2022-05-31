@@ -1,12 +1,16 @@
 TODO:
     particle shit
-    wisps away from wisp bias
     menu
     implement camera (https://github.com/robashton/camera)
 
 
 TODO LATER:
-    splitting wisps (play with the chances)
+    make disapearing work with dev graphics
     hash procedual background
     bias movement towards mouse
     keyboard movement (left & right)
+
+COULD USE IMPROVMENT:
+    wisps away from wisp bias
+    splitting wisps
+
