@@ -16,8 +16,8 @@ You can view a live demo of WebWisps here: [WebWisps Demo](https://webwisps.onre
 
 ##Technologies Used
 
-- **HTML5: For structuring the webpage.
+- **HTML5**: For structuring the webpage.
 
-- **CSS3: For styling the webpage and creating animations.
+- **CSS3**: For styling the webpage and creating animations.
 
-- **JavaScript: For the logic behind wisp creation and movement.
+- **JavaScript**: For the logic behind wisp creation and movement.
