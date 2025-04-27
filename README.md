@@ -21,3 +21,6 @@ You can view a live demo of WebWisps here: [WebWisps Demo](https://webwisps.onre
 - **CSS3**: For styling the webpage and creating animations.
 
 - **JavaScript**: For the logic behind wisp creation and movement.
+
+  
+![Screenshot_21](https://github.com/user-attachments/assets/19abc9e4-275e-4d65-b8e7-0a9609a0e64a)
